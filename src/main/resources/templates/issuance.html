@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CIS</title>
+  <style>
+    .flex-container {
+      display: flex;
+      height: 100%;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    }
+
+    .flex-container>div {
+      border: 1px;
+    }
+
+    .font-bold {
+      font-size: large;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+
+    .font-large {
+      font-size: x-large;
+    }
+
+    .form-div {
+      display: flex;
+      flex-direction: column;
+      height: 500px;
+      width: 400px;
+      font-size: medium;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .submitButton {
+      background-color: #4caf50;
+      color: white;
+      padding: 14px 20px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div style="display: flex; flex-direction: column">
+    <div class="flex-container flex-direction: column; ">
+      <h3 class="font-large">Affinidi Credential Issuance</h3>
+      <div class="font-bold"><a href="/user">User Info</a></div>
+      <div class="font-bold"><a href="/logout">Logout</a></div>
+    </div>
+    <div class="flex-container">
+      <div class="font-bold">
+        <h3 class="font-bold" style="color: red;">Issuing VC for Insurance Registration</h3>
+        <div class="font-bold">DID : <span th:text="${userDid}" id="spnUserDid" /></div>
+        <div class="font-bold" id="divRequestVC"><button class="submitButton" id="btnIssueVC">Request VC </button></div>
+        <div id="divAcceptOfferVC" style="display:none">
+          <div class="font-bold">Your Offer URL : <div id="span_offer_url"></div>
+          </div>
+          <div class="font-bold"> <button type="button" role="button" class="submitButton" onclick="SaveVault_Click()">Save to Vault</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+<script>
+
+  async function startIssuance(userDid) {
+    try {
+      const response = await fetch('/api/cis-issuance', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ "userDid": userDid }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const result = await response.json();
+      console.log('result', result);
+      return result;
+    } catch (error) {
+      console.error('There was a problem with the fetch operation:', error);
+    }
+  }
+
+  document.getElementById('btnIssueVC').addEventListener('click', async (event) => {
+    event.preventDefault();
+    var userDid = document.getElementById('spnUserDid').innerText;
+    var response = await startIssuance(userDid);
+    if (response.credentialOfferUri) {
+      const divRequestVC = document.getElementById("divRequestVC");
+      divRequestVC.style.display = "none";
+      const divAcceptOfferVC = document.getElementById("divAcceptOfferVC");
+      divAcceptOfferVC.style.display = "";
+      const span_offer_url = document.getElementById("span_offer_url");
+      span_offer_url.innerText = response.credentialOfferUri;
+    }
+  });
+
+  function SaveVault_Click() {
+    const span_offer_url = document.getElementById("span_offer_url");
+    var url = `https://vault.affinidi.com/claim?credential_offer_uri=${span_offer_url.innerText}`;
+    window.open(url, "_blank").focus();
+  }
+
+</script>
+
+</html>
