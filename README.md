@@ -83,7 +83,7 @@ You can easily do this using the [Affinidi Portal](https://portal.affinidi.com)
 1. Go to [Affinidi Portal](https://portal.affinidi.com).
 
 2. Open `Wallets` menu under the `Tools` section and click on `Create Wallet` with any name (e.g. `MyWallet`) and DID method as `did:key`.
-    ![alt text](./cis-image/wallet-create.png)
+    ![alt text](./docs/cis-image/wallet-create.png)
 
 For more information, refer to the [Wallets documentation](https://docs.affinidi.com/dev-tools/wallets)
 
