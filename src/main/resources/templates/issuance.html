@@ -64,7 +64,7 @@
       <div class="font-bold">
         <h3 class="font-bold" style="color: red;">Issuing VC for Insurance Registration</h3>
         <div class="font-bold">DID : <span th:text="${userDid}" id="spnUserDid" /></div>
-        <div class="font-bold" id="divRequestVC"><button class="submitButton" id="btnIssueVC">Request VC </button></div>
+        <div class="font-bold" id="divRequestVC"><button class="submitButton" id="btnIssueVC">Issue VC </button></div>
         <div id="divAcceptOfferVC" style="display:none">
           <div class="font-bold">Your Offer URL : <div id="span_offer_url"></div>
           </div>
@@ -95,6 +95,7 @@
       console.log('result', result);
       return result;
     } catch (error) {
+      alert('There is an error, check server/console logs')
       console.error('There was a problem with the fetch operation:', error);
     }
   }
