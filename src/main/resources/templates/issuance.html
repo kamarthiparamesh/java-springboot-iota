@@ -57,18 +57,24 @@
   <div style="display: flex; flex-direction: column">
     <div class="flex-container flex-direction: column; ">
       <h3 class="font-large">Affinidi Credential Issuance</h3>
-      <div class="font-bold"><a href="/user">User Info</a></div>
-      <div class="font-bold"><a href="/logout">Logout</a></div>
+      <div class="font-bold"><a href="/">Home</a></div>
+        <div th:if="${userDid != null}" class="font-bold"><a href="/user">User Info</a></div>
+        <div th:if="${userDid != null}" class="font-bold"><a href="/logout">Logout</a></div>
     </div>
     <div class="flex-container">
       <div class="font-bold">
         <h3 class="font-bold" style="color: red;">Issuing VC for Insurance Registration</h3>
-        <div class="font-bold">DID : <span th:text="${userDid}" id="spnUserDid" /></div>
+        <div th:if="${userDid != null}">
+          <div class="font-bold">DID : <span th:text="${userDid}" id="spnUserDid" /></div>
+        </div>
         <div class="font-bold" id="divRequestVC"><button class="submitButton" id="btnIssueVC">Issue VC </button></div>
         <div id="divAcceptOfferVC" style="display:none">
           <div class="font-bold">Your Offer URL : <div id="span_offer_url"></div>
           </div>
-          <div class="font-bold"> <button type="button" role="button" class="submitButton" onclick="SaveVault_Click()">Save to Vault</button>
+          <div class="font-bold" id="tx_code_div" style="display: none;">Transaction Code : <div id="tx_code"></div>
+          </div>
+          <div class="font-bold"> <button type="button" role="button" class="submitButton"
+              onclick="SaveVault_Click()">Save to Vault</button>
           </div>
         </div>
       </div>
@@ -102,7 +108,8 @@
 
   document.getElementById('btnIssueVC').addEventListener('click', async (event) => {
     event.preventDefault();
-    var userDid = document.getElementById('spnUserDid').innerText;
+    var didElm = document.getElementById('spnUserDid');
+    var userDid = didElm ? didElm.innerText : '';
     var response = await startIssuance(userDid);
     if (response.credentialOfferUri) {
       const divRequestVC = document.getElementById("divRequestVC");
@@ -111,6 +118,14 @@
       divAcceptOfferVC.style.display = "";
       const span_offer_url = document.getElementById("span_offer_url");
       span_offer_url.innerText = response.credentialOfferUri;
+
+      if (response.txCode) {
+        const divTxCode = document.getElementById("tx_code_div");
+        divTxCode.style.display = "";
+        const txCode = document.getElementById("tx_code");
+        txCode.innerText = response.txCode;
+      }
+
     }
   });
 

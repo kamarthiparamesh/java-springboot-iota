@@ -38,9 +38,11 @@ public class UserController {
     @GetMapping("/issuance")
     public String issuance(Model model,
             @AuthenticationPrincipal OidcUser oidcUser) {
-        var userDid = oidcUser.getSubject();
-        System.out.println("userDid " + userDid);
-        model.addAttribute("userDid", userDid);
+        if (oidcUser != null) {
+            var userDid = oidcUser.getSubject();
+            System.out.println("userDid " + userDid);
+            model.addAttribute("userDid", userDid);
+        }
         return "issuance";
     }
 

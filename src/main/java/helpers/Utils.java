@@ -82,21 +82,29 @@ public class Utils {
 
         String apiEndpoint = String.format("/cis/v1/%s/issuance/start", dotenv.get("PROJECT_ID"));
 
-        var requestBody = Map.of(
-                "data", List.of(Map.of(
-                        "credentialTypeId", "InsuranceRegistration",
-                        "credentialData", Map.of(
-                                "email", "paramesh.k@afffinid.com",
-                                "name", "parmaesh",
-                                "phoneNumber", "998016607",
-                                "dob", "22/02/2010",
-                                "gender", "Male",
-                                "address", "Bangalore",
-                                "postcode", "560103",
-                                "city", "Bangalore",
-                                "country", "India"))),
-                "claimMode", "NORMAL",
-                "holderDid", userDID);
+        Map<String, Object> credentialData = Map.of(
+                "email", "paramesh.k@afffinid.com",
+                "name", "parmaesh",
+                "phoneNumber", "998016607",
+                "dob", "22/02/2010",
+                "gender", "Male",
+                "address", "Bangalore",
+                "postcode", "560103",
+                "city", "Bangalore",
+                "country", "India");
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("data", List.of(Map.of(
+                "credentialTypeId", "InsuranceRegistration",
+                "credentialData", credentialData)));
+
+        // Conditionally set claimMode and holderDid
+        if (userDID == null || userDID.isEmpty()) {
+            requestBody.put("claimMode", "TX_CODE");
+        } else {
+            requestBody.put("claimMode", "FIXED_HOLDER");
+            requestBody.put("holderDid", userDID);
+        }
 
         var projectScopedToken = GeneratePST();
         var headers = Map.of("Authorization", String.format("Bearer %s", projectScopedToken));
