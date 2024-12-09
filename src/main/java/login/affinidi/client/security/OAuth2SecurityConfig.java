@@ -18,7 +18,7 @@ import org.springframework.http.HttpStatus;
 public class OAuth2SecurityConfig {
 
     /**
-     * This method injects OpenId Connect provider authentication to 
+     * This method injects OpenId Connect provider authentication to
      * every http request served by this application, along with the defined
      * exceptions
      * 
@@ -27,13 +27,11 @@ public class OAuth2SecurityConfig {
      */
     @Bean
     SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
-        http .authorizeExchange(exchanges ->
-                exchanges
-                    .pathMatchers("/", "/api/*", "/error","/login","/issuance","/images/*").permitAll()
-                    .anyExchange().authenticated()
-              )
-              
-              .logout((logout) -> logout.logoutUrl("/logout").logoutSuccessHandler(new ServerLogoutSuccessHandler() {
+        http.authorizeExchange(exchanges -> exchanges
+                .pathMatchers("/", "/api/*", "/error", "/login", "/iota", "/issuance", "/images/*").permitAll()
+                .anyExchange().authenticated())
+
+                .logout((logout) -> logout.logoutUrl("/logout").logoutSuccessHandler(new ServerLogoutSuccessHandler() {
                     @Override
                     public Mono<Void> onLogoutSuccess(WebFilterExchange exchange, Authentication authentication) {
                         ServerHttpResponse response = exchange.getExchange().getResponse();
@@ -41,10 +39,10 @@ public class OAuth2SecurityConfig {
                         response.getHeaders().setLocation(URI.create("/"));
                         response.getCookies().remove("JSESSIONID");
                         return exchange.getExchange().getSession()
-                            .flatMap(WebSession::invalidate);
+                                .flatMap(WebSession::invalidate);
                     }
-                    }))
-              .oauth2Login(Customizer.withDefaults());
+                }))
+                .oauth2Login(Customizer.withDefaults());
         return http.csrf(csrf -> csrf.disable()).build();
     }
 }

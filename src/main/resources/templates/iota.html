@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iota</title>
+  <style>
+    .flex-container {
+      display: flex;
+      height: 100%;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    }
+
+    .flex-container>div {
+      border: 1px;
+    }
+
+    .font-bold {
+      font-size: large;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+
+    .font-large {
+      font-size: x-large;
+    }
+
+    .form-div {
+      display: flex;
+      flex-direction: column;
+      height: 500px;
+      width: 400px;
+      font-size: medium;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .submitButton {
+      background-color: #4caf50;
+      color: white;
+      padding: 14px 20px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div style="display: flex; flex-direction: column">
+    <div class="flex-container flex-direction: column; ">
+      <h3 class="font-large">Affinidi Iota Framework</h3>
+      <div class="font-bold"><a href="/">Home</a></div>
+    </div>
+    <div class="flex-container">
+      <div class="font-bold">
+        <h3 class="font-bold" style="color: red;">Request for Insurance Registration VC</h3>
+        <button class="submitButton" id="btnRequestVC">Request VC </button>
+        <div id="divResponse" style="display:none;width: 600px;overflow: auto;">
+        </div>
+      </div>
+    </div>
+</body>
+<script>
+
+  async function iotaInit(nonce) {
+    try {
+
+      const response = await fetch('/api/iota-init', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ "nonce": nonce, "redirectUrl": window.location.href.split('?')[0] }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const result = await response.json();
+      console.log('result', result);
+      return result.data || result;
+    } catch (error) {
+      alert('There is an error, check server/console logs')
+      console.error('There was a problem with the fetch operation:', error);
+    }
+  }
+
+  async function iotaCallback(iotaRedirect, responseCode) {
+    try {
+      const params = { ...iotaRedirect, responseCode };
+      const response = await fetch('/api/iota-callback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(params),
+      });
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const result = await response.json();
+      console.log('result', result);
+      return result.data || result;
+    } catch (error) {
+      alert('There is an error, check server/console logs')
+      console.error('There was a problem with the fetch operation:', error);
+    }
+  }
+
+  document.getElementById('btnRequestVC').addEventListener('click', async (event) => {
+    event.preventDefault();
+    showResponse('Processing...');
+    const nonce = crypto.randomUUID().replace(/-/g, '').slice(0, 10);
+    var response = await iotaInit(nonce);
+    if (!response.correlationId || !response.transactionId) {
+      console.error('Error response', response);
+      alert('There is error on iota initiate request');
+      showResponse(JSON.stringify(response, null, 2));
+      return;
+    }
+    console.log('response', response);
+
+    const toStore = {
+      nonce,
+      correlationId: response.correlationId,
+      transactionId: response.transactionId,
+    };
+
+    localStorage.setItem("iotaRedirect", JSON.stringify(toStore));
+
+    const divResponse = document.getElementById("divResponse");
+    divResponse.style.display = "";
+
+    var url = `https://vault.affinidi.com/login?request=${response.jwt}`;
+
+    window.location.href = url;
+
+  });
+
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('response_code')) {
+    showResponse('Processing...');
+    document.getElementById('btnRequestVC').style.display = 'none';
+    const responseCode = urlParams.get('response_code');
+    console.log('Found response_code:', responseCode);
+    const iotaRedirectString = localStorage.getItem("iotaRedirect") || "{}";
+    const iotaRedirect = JSON.parse(iotaRedirectString);
+
+    //Call API
+    iotaCallback(iotaRedirect, responseCode).then(response => {
+      document.getElementById('btnRequestVC').style.display = '';
+      urlParams.delete('response_code');
+      window.history.replaceState({}, '', `${window.location.pathname}`);
+      if (!response?.vpToken) {
+        showResponse();
+        console.error('Error response', response);
+        return;
+      }
+      console.log('response', response);
+
+      const vpToken = JSON.parse(response.vpToken);
+      showResponse(JSON.stringify(vpToken, null, 2));
+    });
+  }
+
+  function showResponse(data) {
+    const divResponse = document.getElementById('divResponse')
+    divResponse.style.display = '';
+    divResponse.innerHTML = '<pre>' + data + '</pre>';
+  }
+
+
+</script>
+
+</html>

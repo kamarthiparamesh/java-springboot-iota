@@ -46,6 +46,11 @@ public class UserController {
         return "issuance";
     }
 
+    @GetMapping("/iota")
+    public String iota(Model model) {
+        return "iota";
+    }
+
     /**
      * This method extracts every populated attribute from custom node of idToken
      * and adds it to UI model for display

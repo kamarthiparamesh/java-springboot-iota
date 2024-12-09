@@ -20,6 +20,7 @@ import com.affinidi.tdk.authprovider.*;
 import io.github.cdimascio.dotenv.Dotenv;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import java.util.UUID;
 
 public class Utils {
     private static Dotenv dotenv;
@@ -117,6 +118,49 @@ public class Utils {
 
     }
 
+    public static Mono<Map<String, Object>> iotaStart(String nonce, String redirectUrl) {
+
+        String apiEndpoint = "/ais/v1/initiate-data-sharing-request";
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("configurationId", dotenv.get("IOTA_CONFIG_ID"));
+        requestBody.put("mode", "redirect");
+        requestBody.put("queryId", dotenv.get("IOTA_QUERY_ID"));
+        requestBody.put("correlationId", UUID.randomUUID().toString());
+        requestBody.put("nonce", nonce);
+        requestBody.put("redirectUri", redirectUrl);
+
+        var projectScopedToken = GeneratePST();
+        var headers = Map.of("Authorization", String.format("Bearer %s", projectScopedToken));
+
+        var response = sendPostRequest(apiEndpoint, headers, requestBody);
+
+        System.out.println("Request Successful, response: " + response);
+
+        return response;
+
+    }
+
+    public static Mono<Map<String, Object>> iotaComplete(String responseCode, String correlationId,
+            String transactionId) {
+
+        String apiEndpoint = "/ais/v1/fetch-iota-response";
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("configurationId", dotenv.get("IOTA_CONFIG_ID"));
+        requestBody.put("responseCode", responseCode);
+        requestBody.put("correlationId", correlationId);
+        requestBody.put("transactionId", transactionId);
+
+        var projectScopedToken = GeneratePST();
+        var headers = Map.of("Authorization", String.format("Bearer %s", projectScopedToken));
+
+        var response = sendPostRequest(apiEndpoint, headers, requestBody);
+
+        return response;
+
+    }
+
     private static Mono<Map<String, Object>> sendPostRequest(String apiEndpoint, Map<String, String> headers,
             Object requestBody) {
         return webClient.post()
@@ -132,7 +176,11 @@ public class Utils {
                 })
                 .onErrorResume(WebClientResponseException.class, e -> {
                     System.err.println("WebClientResponseException: " + e.getResponseBodyAsString());
-                    return Mono.empty(); // Or handle error as needed
+                    Map<String, Object> errorResponse = new HashMap<>();
+                    errorResponse.put("status", "error");
+                    errorResponse.put("message", e.getMessage());
+                    errorResponse.put("responseBody", e.getResponseBodyAsString());
+                    return Mono.just(errorResponse);
                 });
     }
 
