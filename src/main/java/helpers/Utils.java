@@ -1,187 +1,156 @@
 package helpers;
 
-import java.net.URI;
-import java.time.Duration;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-
-import com.affinidi.tdk.authprovider.*;
-import io.github.cdimascio.dotenv.Dotenv;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import java.util.UUID;
 
+import com.affinidi.tdk.authProvider.AuthProvider;
+import com.affinidi.tdk.authProvider.exception.ConfigurationException;
+import com.affinidi.tdk.authProvider.exception.PSTGenerationException;
+import com.affinidi.tdk.common.EnvironmentUtil;
+import com.affinidi.tdk.common.VaultUtil;
+import com.affinidi.tdk.credential.issuance.client.ApiClient;
+import com.affinidi.tdk.credential.issuance.client.Configuration;
+import com.affinidi.tdk.credential.issuance.client.apis.IssuanceApi;
+import com.affinidi.tdk.credential.issuance.client.auth.ApiKeyAuth;
+import com.affinidi.tdk.credential.issuance.client.models.StartIssuanceInput;
+import com.affinidi.tdk.credential.issuance.client.models.StartIssuanceInput.ClaimModeEnum;
+import com.affinidi.tdk.iota.client.apis.IotaApi;
+import com.affinidi.tdk.iota.client.models.FetchIOTAVPResponseInput;
+import com.affinidi.tdk.iota.client.models.FetchIOTAVPResponseOK;
+import com.affinidi.tdk.iota.client.models.InitiateDataSharingRequestInput;
+import com.affinidi.tdk.iota.client.models.InitiateDataSharingRequestOK;
+import com.affinidi.tdk.iota.client.models.InitiateDataSharingRequestInput.ModeEnum;
+import com.affinidi.tdk.credential.issuance.client.models.StartIssuanceInputDataInner;
+import com.affinidi.tdk.credential.issuance.client.models.StartIssuanceResponse;
+
 public class Utils {
-    private static Dotenv dotenv;
 
-    private static WebClient webClient;
+    private static AuthProvider authProvider;
 
-    static {
-        dotenv = Dotenv.load();
-        webClient = WebClient.builder()
-                .baseUrl(dotenv.get("API_GATEWAY_URL"))
-                .defaultHeader("Content-Type", "application/json")
-                .defaultHeader("Accept", "application/json")
-                .build();
-    }
-
-    private static AuthProvider getAuthProvider() {
-        Map<String, String> params = new HashMap<>();
-        params.put("projectId", dotenv.get("PROJECT_ID"));
-        params.put("tokenId", dotenv.get("TOKEN_ID"));
-        params.put("keyId", dotenv.get("KEY_ID"));
-        params.put("privateKey", dotenv.get("PRIVATE_KEY").replace("\\n", System.getProperty("line.separator")));
-        params.put("passphrase", dotenv.get("PASSPHRASE"));
-
-        // Create an instance of AuthProvider
-        AuthProvider authProvider = new AuthProvider(params);
+    public static AuthProvider getAuthProvider() throws ConfigurationException {
+        if (authProvider == null) {
+            authProvider = new AuthProvider.Configurations().buildWithEnv();
+        }
         return authProvider;
     }
 
-    public static String GeneratePST() {
+    public static String getAuthorizationToken() throws PSTGenerationException, ConfigurationException {
+        System.out.println("\n\n############ Performance Check : Is AuthProvider going to fetch a new token : "
+                + getAuthProvider().shouldRefreshToken() + "########## \n\n");
+        return getAuthProvider().fetchProjectScopedToken();
 
-        // Create an instance of AuthProvider
-        AuthProvider authProvider = getAuthProvider();
-
-        // Call fetchProjectScopedToken method
-        String projectScopedToken = authProvider.fetchProjectScopedToken();
-
-        // Output the token
-        System.out.println("Project Scoped Token: " + projectScopedToken);
-
-        return projectScopedToken;
     }
 
-    public static String getIotaJWT(String userDID) throws Exception {
+    public static StartIssuanceResponse startIssuance(String userDID, Map<String, Object> credentialData,
+            String credentialTypeId) {
 
-        AuthProvider authProvider = getAuthProvider();
-        var iotaConfigId = dotenv.get("IOTA_CONFIG_ID");
+        StartIssuanceResponse response = null;
+        try {
+            // Create a client for issuance
+            ApiClient issuanceClient = Configuration.getDefaultApiClient();
+            ApiKeyAuth issueTokenAuth = (ApiKeyAuth) issuanceClient.getAuthentication("ProjectTokenAuth");
 
-        // Call fetchProjectScopedToken method
-        IotaTokenOutput tokenOutput = authProvider.createIotaToken(iotaConfigId, userDID);
+            // Create a authentication token
+            String projectToken = getAuthorizationToken();
+            issueTokenAuth.setApiKey(projectToken);
 
-        var jwt = tokenOutput.getIotaJwt();
-        var sessionId = tokenOutput.getIotaSessionId();
-        System.out.println("Iota JWT: " + jwt);
-        System.out.println("Iota sessionId: " + sessionId);
+            // Iniialize the API client
+            IssuanceApi issuanceApi = new IssuanceApi(issuanceClient);
 
-        return tokenOutput.getIotaJwt();
-    }
+            // Create input for issuance service
+            StartIssuanceInput startIssuanceInput = new StartIssuanceInput()
+                    .data(new ArrayList<StartIssuanceInputDataInner>(
+                            List.of(new StartIssuanceInputDataInner()
+                                    .credentialTypeId(credentialTypeId)
+                                    .credentialData(credentialData))));
 
-    public static Mono<Map<String, Object>> startIssuance(String userDID) {
+            // Conditionally set claimMode and holderDid
+            if (userDID == null || userDID.isEmpty()) {
+                startIssuanceInput.claimMode(ClaimModeEnum.TX_CODE);
+            } else {
+                startIssuanceInput.holderDid(userDID).claimMode(ClaimModeEnum.FIXED_HOLDER);
+            }
 
-        String apiEndpoint = String.format("/cis/v1/%s/issuance/start", dotenv.get("PROJECT_ID"));
+            // Issue the credential using the data above
+            response = issuanceApi.startIssuance(EnvironmentUtil.getValueFromEnvConfig("PROJECT_ID"),
+                    startIssuanceInput);
+            System.out.println("Credential Offer Generated ********** " + response.getCredentialOfferUri() + "\n\n");
 
-        Map<String, Object> credentialData = Map.of(
-                "email", "paramesh.k@afffinid.com",
-                "name", "parmaesh",
-                "phoneNumber", "998016607",
-                "dob", "22/02/2010",
-                "gender", "Male",
-                "address", "Bangalore",
-                "postcode", "560103",
-                "city", "Bangalore",
-                "country", "India");
+            response.setCredentialOfferUri(VaultUtil.buildClaimLink(response.getCredentialOfferUri()));
+            System.out.println("Consumable Vault Claim Link specific to your environment ********** "
+                    + response.getCredentialOfferUri());
 
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("data", List.of(Map.of(
-                "credentialTypeId", "InsuranceRegistration",
-                "credentialData", credentialData)));
-
-        // Conditionally set claimMode and holderDid
-        if (userDID == null || userDID.isEmpty()) {
-            requestBody.put("claimMode", "TX_CODE");
-        } else {
-            requestBody.put("claimMode", "FIXED_HOLDER");
-            requestBody.put("holderDid", userDID);
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
-
-        var projectScopedToken = GeneratePST();
-        var headers = Map.of("Authorization", String.format("Bearer %s", projectScopedToken));
-
-        var response = sendPostRequest(apiEndpoint, headers, requestBody);
-
-        System.out.println("Request Successful, response: " + response);
-
         return response;
 
     }
 
-    public static Mono<Map<String, Object>> iotaStart(String nonce, String redirectUrl) {
+    public static InitiateDataSharingRequestOK iotaStart(String nonce, String redirectUrl, String iotaQueryId,
+            String iotaConfigId) {
+        InitiateDataSharingRequestOK response = null;
+        try {
+            com.affinidi.tdk.iota.client.ApiClient iotaClient = com.affinidi.tdk.iota.client.Configuration
+                    .getDefaultApiClient();
+            com.affinidi.tdk.iota.client.auth.ApiKeyAuth iotaTokenAuth = (com.affinidi.tdk.iota.client.auth.ApiKeyAuth) iotaClient
+                    .getAuthentication("ProjectTokenAuth");
 
-        String apiEndpoint = "/ais/v1/initiate-data-sharing-request";
+            // Create a authentication token
+            String projectToken = getAuthorizationToken();
+            iotaTokenAuth.setApiKey(projectToken);
 
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("configurationId", dotenv.get("IOTA_CONFIG_ID"));
-        requestBody.put("mode", "redirect");
-        requestBody.put("queryId", dotenv.get("IOTA_QUERY_ID"));
-        requestBody.put("correlationId", UUID.randomUUID().toString());
-        requestBody.put("nonce", nonce);
-        requestBody.put("redirectUri", redirectUrl);
+            // Iniialize the API client
+            IotaApi iotaApi = new IotaApi(iotaClient);
 
-        var projectScopedToken = GeneratePST();
-        var headers = Map.of("Authorization", String.format("Bearer %s", projectScopedToken));
+            // Initiatte IOTA data sharing request
+            response = iotaApi.initiateDataSharingRequest(new InitiateDataSharingRequestInput()
+                    .mode(ModeEnum.REDIRECT)
+                    .nonce(nonce)
+                    .queryId(iotaQueryId)
+                    .configurationId(iotaConfigId)
+                    .correlationId(UUID.randomUUID().toString())
+                    .redirectUri(redirectUrl));
 
-        var response = sendPostRequest(apiEndpoint, headers, requestBody);
-
-        System.out.println("Request Successful, response: " + response);
-
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
         return response;
 
     }
 
-    public static Mono<Map<String, Object>> iotaComplete(String responseCode, String correlationId,
-            String transactionId) {
+    public static FetchIOTAVPResponseOK iotaComplete(String responseCode, String correlationId,
+            String transactionId, String iotaConfigId) {
 
-        String apiEndpoint = "/ais/v1/fetch-iota-response";
+        FetchIOTAVPResponseOK response = null;
+        try {
 
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("configurationId", dotenv.get("IOTA_CONFIG_ID"));
-        requestBody.put("responseCode", responseCode);
-        requestBody.put("correlationId", correlationId);
-        requestBody.put("transactionId", transactionId);
+            com.affinidi.tdk.iota.client.ApiClient iotaClient = com.affinidi.tdk.iota.client.Configuration
+                    .getDefaultApiClient();
+            com.affinidi.tdk.iota.client.auth.ApiKeyAuth iotaTokenAuth = (com.affinidi.tdk.iota.client.auth.ApiKeyAuth) iotaClient
+                    .getAuthentication("ProjectTokenAuth");
 
-        var projectScopedToken = GeneratePST();
-        var headers = Map.of("Authorization", String.format("Bearer %s", projectScopedToken));
+            // Create a authentication token
+            String projectToken = getAuthorizationToken();
+            iotaTokenAuth.setApiKey(projectToken);
 
-        var response = sendPostRequest(apiEndpoint, headers, requestBody);
+            // Iniialize the API client
+            IotaApi iotaApi = new IotaApi(iotaClient);
 
+            // Create IOTA data sharing request
+            response = iotaApi.fetchIotaVpResponse(new FetchIOTAVPResponseInput()
+                    .transactionId(transactionId)
+                    .correlationId(correlationId)
+                    .responseCode(responseCode)
+                    .configurationId(iotaConfigId));
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
         return response;
 
-    }
-
-    private static Mono<Map<String, Object>> sendPostRequest(String apiEndpoint, Map<String, String> headers,
-            Object requestBody) {
-        return webClient.post()
-                .uri(apiEndpoint)
-                .headers(httpHeaders -> {
-                    if (headers != null) {
-                        headers.forEach(httpHeaders::set);
-                    }
-                })
-                .body(Mono.just(requestBody), Object.class)
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
-                })
-                .onErrorResume(WebClientResponseException.class, e -> {
-                    System.err.println("WebClientResponseException: " + e.getResponseBodyAsString());
-                    Map<String, Object> errorResponse = new HashMap<>();
-                    errorResponse.put("status", "error");
-                    errorResponse.put("message", e.getMessage());
-                    errorResponse.put("responseBody", e.getResponseBodyAsString());
-                    return Mono.just(errorResponse);
-                });
     }
 
 }

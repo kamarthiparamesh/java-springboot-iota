@@ -132,8 +132,7 @@
 
   function SaveVault_Click() {
     const span_offer_url = document.getElementById("span_offer_url");
-    var url = `https://vault.affinidi.com/claim?credential_offer_uri=${span_offer_url.innerText}`;
-    window.open(url, "_blank").focus();
+    window.open(span_offer_url.innerText, "_blank").focus();
   }
 
 </script>

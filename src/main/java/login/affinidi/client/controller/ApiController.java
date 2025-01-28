@@ -1,6 +1,5 @@
 package login.affinidi.client.controller;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.http.MediaType;
@@ -10,60 +9,58 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.affinidi.tdk.common.EnvironmentUtil;
+import com.affinidi.tdk.credential.issuance.client.models.StartIssuanceResponse;
+import com.affinidi.tdk.iota.client.models.FetchIOTAVPResponseOK;
+import com.affinidi.tdk.iota.client.models.InitiateDataSharingRequestOK;
+
 import helpers.Utils;
-import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api")
 public class ApiController {
 
     @PostMapping(path = "/cis-issuance", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<Map<String, Object>> issuance(Model model, @RequestBody Map<String, String> data) {
+    public StartIssuanceResponse issuance(Model model, @RequestBody Map<String, String> data) {
         var userDid = data.get("userDid");
         System.out.println("userDid " + userDid);
-        var response = Utils.startIssuance(userDid);
+
+        String credentialTypeId = "InsuranceRegistration";
+
+        Map<String, Object> credentialData = Map.of(
+                "email", "paramesh.k@afffinid.com",
+                "name", "parmaesh",
+                "phoneNumber", "998016607",
+                "dob", "22/02/2010",
+                "gender", "Male",
+                "address", "Bangalore",
+                "postcode", "560103",
+                "city", "Bangalore",
+                "country", "India");
+
+        var response = Utils.startIssuance(userDid, credentialData, credentialTypeId);
         return response;
     }
 
     @PostMapping(path = "/iota-init", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<Map<String, Object>> iotaInit(Model model, @RequestBody Map<String, String> data) {
-        try {
-            var nonce = data.get("nonce");
-            var redirectUrl = data.get("redirectUrl");
-            var response = Utils.iotaStart(nonce, redirectUrl);
-            return response;
+    public InitiateDataSharingRequestOK iotaInit(Model model, @RequestBody Map<String, String> data) {
+        var nonce = data.get("nonce");
+        var redirectUrl = data.get("redirectUrl");
+        String iotaQueryId = EnvironmentUtil.getValueFromEnvConfig("IOTA_QUERY_ID");
+        String iotaConfigId = EnvironmentUtil.getValueFromEnvConfig("IOTA_CONFIG_ID");
 
-        } catch (Exception e) {
-            // Log the exception
-            e.printStackTrace();
-
-            // Return error response
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("status", "error");
-            errorResponse.put("message", e.getMessage());
-            return Mono.just(errorResponse);
-        }
-
+        var response = Utils.iotaStart(nonce, redirectUrl, iotaQueryId, iotaConfigId);
+        return response;
     }
 
     @PostMapping(path = "/iota-callback", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<Map<String, Object>> iotaCallback(Model model, @RequestBody Map<String, String> data) {
-        try {
-            var responseCode = data.get("responseCode");
-            var correlationId = data.get("correlationId");
-            var transactionId = data.get("transactionId");
-            var response = Utils.iotaComplete(responseCode, correlationId, transactionId);
-            return response;
-        } catch (Exception e) {
-            // Log the exception
-            e.printStackTrace();
-
-            // Return error response
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("status", "error");
-            errorResponse.put("message", e.getMessage());
-            return Mono.just(errorResponse);
-        }
+    public FetchIOTAVPResponseOK iotaCallback(Model model, @RequestBody Map<String, String> data) {
+        var responseCode = data.get("responseCode");
+        var correlationId = data.get("correlationId");
+        var transactionId = data.get("transactionId");
+        String iotaConfigId = EnvironmentUtil.getValueFromEnvConfig("IOTA_CONFIG_ID");
+        var response = Utils.iotaComplete(responseCode, correlationId, transactionId, iotaConfigId);
+        return response;
     }
 
 }
