@@ -77,6 +77,17 @@
 			<artifactId>iota.client</artifactId>
 			<version>1.2.0</version>
 		</dependency>
+		<dependency>
+    <groupId>com.affinidi.tdk</groupId>
+    <artifactId>credential.verification.client</artifactId>
+    <version>1.2.1</version>
+</dependency>
+	 <dependency>
+        <groupId>org.json</groupId>
+        <artifactId>json</artifactId>
+        <version>20230227</version>
+    </dependency>
+
 	</dependencies>
 
 	<build>

@@ -20,7 +20,7 @@ public class UserController {
     /**
      * This method acts as handler for /user endpoint. It extracs details from
      * authenticator oidc user for user interface
-     * 
+     *
      * @param model
      * @param oidcUser
      * @return
@@ -51,10 +51,17 @@ public class UserController {
         return "iota";
     }
 
+    @GetMapping("/verify")
+    public String verify(Model model) {
+        return "verify";
+    }
+
+
+
     /**
      * This method extracts every populated attribute from custom node of idToken
      * and adds it to UI model for display
-     * 
+     *
      * @param customNodeFromToken
      * @param model
      */

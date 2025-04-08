@@ -21,9 +21,23 @@ import com.affinidi.tdk.iota.client.models.FetchIOTAVPResponseInput;
 import com.affinidi.tdk.iota.client.models.FetchIOTAVPResponseOK;
 import com.affinidi.tdk.iota.client.models.InitiateDataSharingRequestInput;
 import com.affinidi.tdk.iota.client.models.InitiateDataSharingRequestOK;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.affinidi.tdk.iota.client.models.InitiateDataSharingRequestInput.ModeEnum;
 import com.affinidi.tdk.credential.issuance.client.models.StartIssuanceInputDataInner;
 import com.affinidi.tdk.credential.issuance.client.models.StartIssuanceResponse;
+
+import com.affinidi.tdk.credential.verification.client.models.VerifyCredentialInput;
+import com.affinidi.tdk.credential.verification.client.models.VerifyCredentialOutput;
+import com.affinidi.tdk.credential.verification.client.models.W3cCredential;
+import com.affinidi.tdk.credential.verification.client.models.W3cCredentialCredentialSchema;
+import com.affinidi.tdk.credential.verification.client.models.W3cCredentialCredentialSubject;
+import com.affinidi.tdk.credential.verification.client.models.W3cCredentialHolder;
+import com.affinidi.tdk.credential.verification.client.models.W3cCredentialStatus;
+import com.affinidi.tdk.credential.verification.client.models.W3cPresentationContext;
+import com.affinidi.tdk.credential.verification.client.models.W3cProof;
+import org.json.JSONObject;
+
+import com.affinidi.tdk.credential.verification.client.apis.DefaultApi;
 
 public class Utils {
 
@@ -61,10 +75,8 @@ public class Utils {
 
             // Create input for issuance service
             StartIssuanceInput startIssuanceInput = new StartIssuanceInput()
-                    .data(new ArrayList<StartIssuanceInputDataInner>(
-                            List.of(new StartIssuanceInputDataInner()
-                                    .credentialTypeId(credentialTypeId)
-                                    .credentialData(credentialData))));
+                    .data(new ArrayList<StartIssuanceInputDataInner>(List.of(new StartIssuanceInputDataInner()
+                            .credentialTypeId(credentialTypeId).credentialData(credentialData))));
 
             // Conditionally set claimMode and holderDid
             if (userDID == null || userDID.isEmpty()) {
@@ -106,13 +118,9 @@ public class Utils {
             IotaApi iotaApi = new IotaApi(iotaClient);
 
             // Initiatte IOTA data sharing request
-            response = iotaApi.initiateDataSharingRequest(new InitiateDataSharingRequestInput()
-                    .mode(ModeEnum.REDIRECT)
-                    .nonce(nonce)
-                    .queryId(iotaQueryId)
-                    .configurationId(iotaConfigId)
-                    .correlationId(UUID.randomUUID().toString())
-                    .redirectUri(redirectUrl));
+            response = iotaApi.initiateDataSharingRequest(new InitiateDataSharingRequestInput().mode(ModeEnum.REDIRECT)
+                    .nonce(nonce).queryId(iotaQueryId).configurationId(iotaConfigId)
+                    .correlationId(UUID.randomUUID().toString()).redirectUri(redirectUrl));
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -121,8 +129,8 @@ public class Utils {
 
     }
 
-    public static FetchIOTAVPResponseOK iotaComplete(String responseCode, String correlationId,
-            String transactionId, String iotaConfigId) {
+    public static FetchIOTAVPResponseOK iotaComplete(String responseCode, String correlationId, String transactionId,
+            String iotaConfigId) {
 
         FetchIOTAVPResponseOK response = null;
         try {
@@ -140,11 +148,8 @@ public class Utils {
             IotaApi iotaApi = new IotaApi(iotaClient);
 
             // Create IOTA data sharing request
-            response = iotaApi.fetchIotaVpResponse(new FetchIOTAVPResponseInput()
-                    .transactionId(transactionId)
-                    .correlationId(correlationId)
-                    .responseCode(responseCode)
-                    .configurationId(iotaConfigId));
+            response = iotaApi.fetchIotaVpResponse(new FetchIOTAVPResponseInput().transactionId(transactionId)
+                    .correlationId(correlationId).responseCode(responseCode).configurationId(iotaConfigId));
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -153,4 +158,43 @@ public class Utils {
 
     }
 
+    public static String verifyVC(String credentialData) {
+
+        if (credentialData == null || credentialData.isEmpty()) {
+            return "Invalid credential data";
+        }
+        try {
+            com.affinidi.tdk.credential.verification.client.ApiClient verificationClient = com.affinidi.tdk.credential.verification.client.Configuration
+                    .getDefaultApiClient();
+
+            // Configure API key authorization: ProjectTokenAuth
+            com.affinidi.tdk.credential.verification.client.auth.ApiKeyAuth ProjectTokenAuth = (com.affinidi.tdk.credential.verification.client.auth.ApiKeyAuth) verificationClient
+                    .getAuthentication("ProjectTokenAuth");
+            // Create a authentication token
+            String projectToken = getAuthorizationToken();
+            ProjectTokenAuth.setApiKey(projectToken);
+            System.out.println("Project Token : " + projectToken);
+
+            ObjectMapper mapper = new ObjectMapper();
+            // Convert JSON string to W3cCredential object
+            Object w3cCredential = mapper.readValue(credentialData, Object.class);
+            System.out.println("Credential : " + w3cCredential.toString());
+
+
+            VerifyCredentialInput verifyCredentialInput = new VerifyCredentialInput();
+            verifyCredentialInput.addVerifiableCredentialsItem((W3cCredential) w3cCredential);
+            // Initialize the API client
+            DefaultApi apiInstance = new DefaultApi(verificationClient);
+            VerifyCredentialOutput response = apiInstance.verifyCredentials(verifyCredentialInput);
+            System.out.println("Verification response : " + response.toString());
+            return response.toString();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "Verification failed due to an error.";
+    }
+
+
 }
+

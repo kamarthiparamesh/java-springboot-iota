@@ -63,4 +63,11 @@ public class ApiController {
         return response;
     }
 
+    @PostMapping(path = "/vc-verify", produces = MediaType.APPLICATION_JSON_VALUE)
+    public String verifyVC(Model model, @RequestBody Map<String, String> data) {
+        var credentialData = data.get("credentialData");
+        var response = Utils.verifyVC(credentialData);
+        return response;
+    }
+
 }

@@ -21,14 +21,14 @@ public class OAuth2SecurityConfig {
      * This method injects OpenId Connect provider authentication to
      * every http request served by this application, along with the defined
      * exceptions
-     * 
+     *
      * @param http
      * @return
      */
     @Bean
     SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         http.authorizeExchange(exchanges -> exchanges
-                .pathMatchers("/", "/api/*", "/error", "/login", "/iota", "/issuance", "/images/*").permitAll()
+                .pathMatchers("/", "/api/*", "/error", "/login", "/iota", "/issuance", "/images/*", "/verify").permitAll()
                 .anyExchange().authenticated())
 
                 .logout((logout) -> logout.logoutUrl("/logout").logoutSuccessHandler(new ServerLogoutSuccessHandler() {
