@@ -70,4 +70,12 @@ public class ApiController {
         return response;
     }
 
+    @PostMapping(path = "/get-claimed-credentials", produces = MediaType.APPLICATION_JSON_VALUE)
+    public String getClaimedCredentials(Model model, @RequestBody Map<String, String> data) {
+        var issuanceId = data.get("issuanceId");
+        var response = Utils.getClaimedCredentials(issuanceId);
+        return response;
+    }
+
+
 }

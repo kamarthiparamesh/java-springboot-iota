@@ -12,6 +12,7 @@ import com.affinidi.tdk.common.EnvironmentUtil;
 import com.affinidi.tdk.common.VaultUtil;
 import com.affinidi.tdk.credential.issuance.client.ApiClient;
 import com.affinidi.tdk.credential.issuance.client.Configuration;
+import com.affinidi.tdk.credential.issuance.client.apis.CredentialsApi;
 import com.affinidi.tdk.credential.issuance.client.apis.IssuanceApi;
 import com.affinidi.tdk.credential.issuance.client.auth.ApiKeyAuth;
 import com.affinidi.tdk.credential.issuance.client.models.StartIssuanceInput;
@@ -21,7 +22,8 @@ import com.affinidi.tdk.iota.client.models.FetchIOTAVPResponseInput;
 import com.affinidi.tdk.iota.client.models.FetchIOTAVPResponseOK;
 import com.affinidi.tdk.iota.client.models.InitiateDataSharingRequestInput;
 import com.affinidi.tdk.iota.client.models.InitiateDataSharingRequestOK;
-
+import com.affinidi.tdk.credential.issuance.client.models.ClaimedCredentialResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.affinidi.tdk.iota.client.models.InitiateDataSharingRequestInput.ModeEnum;
 import com.affinidi.tdk.credential.issuance.client.models.StartIssuanceInputDataInner;
 import com.affinidi.tdk.credential.issuance.client.models.StartIssuanceResponse;
@@ -159,14 +161,13 @@ public class Utils {
             String projectToken = getAuthorizationToken();
             System.out.println("Project Token : " + projectToken);
 
-            String verifierUrl =  "https://apse1.api.affinidi.io/ver/v1/verifier/verify-vcs";
+            String verifierUrl = "https://apse1.api.affinidi.io/ver/v1/verifier/verify-vcs";
             System.out.println("Verifier URL : " + verifierUrl);
 
             HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.APPLICATION_JSON);
-                headers.set("Authorization", "Bearer " + projectToken);
-                headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
-
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("Authorization", "Bearer " + projectToken);
+            headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
 
             RestTemplate restTemplate = new RestTemplate();
             String requestBody = "{ \"verifiableCredentials\": [" + credentialData + "]}";
@@ -175,7 +176,6 @@ public class Utils {
             HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
             String response = restTemplate.postForObject(verifierUrl, requestEntity, String.class);
-
 
             System.out.println("Response : " + response);
             return response;
@@ -186,5 +186,40 @@ public class Utils {
         return "Verification failed due to an error.";
     }
 
+    public static String getClaimedCredentials(String issuanceId) {
+
+        if (issuanceId == null || issuanceId.isEmpty()) {
+            return "Invalid issuance ID";
+        }
+        String claimedCredentials = null;
+        try {
+
+            ApiClient defaultClient = Configuration.getDefaultApiClient();
+            // Configure API key authorization: ProjectTokenAuth
+            ApiKeyAuth ProjectTokenAuth = (ApiKeyAuth) defaultClient.getAuthentication("ProjectTokenAuth");
+            ProjectTokenAuth.setApiKey(authProvider.fetchProjectScopedToken());
+            System.out.println("Fetching claimed credentials for issuance ID: " + issuanceId);
+            System.out.println("Project Token : " + ProjectTokenAuth.getApiKey());
+            System.out.println("Project ID : " + EnvironmentUtil.getValueFromEnvConfig("PROJECT_ID"));
+            System.out.println("Configuration ID : " + EnvironmentUtil.getValueFromEnvConfig("CONFIGURATION_ID"));
+
+            CredentialsApi apiInstance = new CredentialsApi(defaultClient);
+
+            String projectId = EnvironmentUtil.getValueFromEnvConfig("PROJECT_ID");
+            String configId = EnvironmentUtil.getValueFromEnvConfig("CONFIGURATION_ID");
+
+            ClaimedCredentialResponse response = apiInstance.getIssuanceIdClaimedCredential(projectId, configId,
+                    issuanceId);
+            ObjectMapper objectMapper = new ObjectMapper();
+            claimedCredentials = objectMapper.writeValueAsString(response.getCredential());
+
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+
+        return claimedCredentials;
+    }
 
 }

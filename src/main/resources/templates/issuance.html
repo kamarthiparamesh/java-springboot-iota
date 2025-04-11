@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"> <!-- Added Thymeleaf namespace -->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CIS</title>
+    <title>Credential Issuance</title>
     <style>
-      /* --- Common Styles (like verify.html) --- */
+      /* --- Common Styles (Consistent with verify.html) --- */
       body {
         font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
           "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
@@ -23,7 +23,7 @@
       }
       .header-container h3 {
         margin: 0;
-        font-size: x-large; /* Keep original font size */
+        font-size: x-large;
       }
       .nav-links {
         display: flex;
@@ -37,125 +37,154 @@
         padding: 5px 10px;
         border-radius: 4px;
         transition: background-color 0.3s ease;
-        font-size: large; /* Keep original font size */
+        font-size: large;
       }
       .nav-links a:hover {
         background-color: #eee;
       }
 
-      /* --- Content Area Styles (like verify.html) --- */
+      /* --- Content Area Styles (Consistent with verify.html) --- */
       .content-container {
         display: flex;
         justify-content: center;
-        align-items: flex-start; /* Align box to the top */
+        align-items: flex-start;
+        margin-bottom: 30px;
       }
-      .issuance-box { /* Renamed from verification-box */
+      .issuance-box {
         background-color: #fff;
         padding: 30px;
         border-radius: 8px;
         box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
-        width: 600px; /* Adjusted width for content */
+        width: 600px;
         max-width: 90%;
-        text-align: center; /* Center heading and button initially */
       }
       .issuance-box h3 {
         margin-top: 0;
         margin-bottom: 20px;
-        color: #d9534f; /* Match verify.html style */
+        color: #d9534f;
         text-align: center;
       }
 
       /* --- Specific Issuance Styles --- */
-      .font-bold { /* Kept for elements needing bold */
+      .font-bold {
         font-weight: bold;
       }
-      .submitButton {
-        background-color: #4caf50;
+      .submitButton,
+      .resetButton {
         color: white;
         padding: 14px 20px;
-        margin: 20px 0 8px 0; /* Added top margin */
+        margin: 20px 5px 8px 5px;
         border: none;
         border-radius: 4px;
         cursor: pointer;
-        width: auto; /* Don't force full width */
-        min-width: 150px; /* Give it some minimum width */
+        width: auto;
+        min-width: 150px;
         font-size: 16px;
         transition: background-color 0.3s ease;
+      }
+      .submitButton {
+        background-color: #4caf50; /* Green */
       }
       .submitButton:hover {
-         background-color: #45a049;
+        background-color: #45a049;
       }
-
       .resetButton {
-        background-color:rgb(233, 26, 26);
-        color: white;
-        padding: 14px 20px;
-        margin: 20px 0 8px 0; /* Added top margin */
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        width: auto; /* Don't force full width */
-        min-width: 150px; /* Give it some minimum width */
-        font-size: 16px;
-        transition: background-color 0.3s ease;
+        background-color: rgb(233, 26, 26); /* Red */
       }
-      .resetButton:hover { /* Changed from .submitButton to .resetButton */
-         background-color: rgb(233, 26, 26); /* Updated hover color */
+      .resetButton:hover {
+        background-color: rgb(196, 22, 22);
       }
 
+      #divRequestVC,
+      #divRequestClaimedVC {
+        text-align: center;
+      }
+
+      #divResponse,
+      #divClaimedResponse {
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: #f9f9f9;
+        display: none; /* Initially hidden */
+        text-align: left;
+      }
       #divResponse p,
-      #divResponse div {
-        margin-top: 10px;
+      #divClaimedResponse p {
+        margin-top: 0;
         margin-bottom: 10px;
         word-break: break-all;
-        text-align: left; /* Align response text left */
       }
-      #divResponse {
-         margin-top: 20px;
-         padding: 15px;
-         border: 1px solid #ddd;
-         border-radius: 4px;
-         background-color: #f9f9f9;
-         display: none; /* Initially hidden */
+      /* Style for <pre> tag used for JSON output */
+      #divClaimedResponse pre {
+          margin: 0;
+          white-space: pre-wrap; /* Allow wrapping */
+          word-break: break-all; /* Break long lines */
+          font-family: monospace; /* Use monospace for JSON */
       }
       .error-message {
         color: red;
         font-weight: bold;
       }
-      #divAcceptOfferVC {
-         margin-top: 20px;
-         text-align: left; /* Align offer details left */
-         border-top: 1px solid #eee; /* Add separator */
-         padding-top: 20px; /* Add space above offer */
-      }
-       #span_offer_url, #tx_code {
-         background-color: #eee;
-         padding: 8px;
-         border-radius: 4px;
-         display: block; /* Make them block elements */
-         margin-top: 5px;
-         word-break: break-all;
-       }
-       #tx_code_div {
-         margin-top: 15px;
-       }
-       #divAcceptOfferVC .submitButton { /* Style button within offer section */
-          margin-top: 15px;
-       }
-       .did-display p { /* Style the DID display */
-          margin-bottom: 20px;
-          font-size: medium;
-          color: #555;
-       }
 
-      /* --- Removed Unused Styles --- */
-      /* .flex-container, .font-large, .form-div */
+      #divAcceptOfferVC {
+        margin-top: 20px;
+        text-align: left;
+        border-top: 1px solid #eee;
+        padding-top: 20px;
+      }
+      #span_offer_url,
+      #tx_code,
+      #issuanceId {
+        background-color: #eee;
+        padding: 8px;
+        border-radius: 4px;
+        display: block;
+        margin-top: 5px;
+        word-break: break-all;
+        /* font-family: monospace; Removed */
+      }
+      #tx_code_div,
+      #issuanceIdDiv {
+        margin-top: 15px;
+      }
+      #divAcceptOfferVC .submitButton,
+      #divAcceptOfferVC .resetButton {
+        margin-top: 15px;
+      }
+
+      .did-display {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .did-display p {
+        font-size: medium;
+        color: #555;
+        margin: 0;
+      }
+      .did-display strong {
+        /* font-family: monospace; Removed */
+        word-break: break-all;
+      }
+
+      #jsonResponse { /* Kept for first section, if needed later */
+        width: 100%;
+        min-height: 150px;
+        border: 1px solid #ccc;
+        padding: 10px;
+        box-sizing: border-box;
+        margin-top: 10px;
+        resize: vertical;
+        display: none; /* Initially hidden, shown by JS */
+        /* font-family: monospace; Removed */
+      }
 
     </style>
   </head>
 
   <body>
-    <!-- Header remains the same -->
+    <!-- Header -->
     <div class="header-container">
       <h3>Affinidi Reference App</h3>
       <div class="nav-links">
@@ -169,38 +198,46 @@
       </div>
     </div>
 
-    <!-- Updated Content Area -->
+    <!-- Initial Issuance Section -->
     <div class="content-container">
-      <div class="issuance-box"> <!-- Use the new box style -->
+      <div class="issuance-box">
         <h3>Issuing VC for Insurance Registration</h3>
 
-        <!-- Display User DID if available -->
-        <div th:if="${userDid != null}" class="did-display">
-          <p>Your DID: <strong id="spnUserDid" th:text="${userDid}"></strong></p>
-        </div>
-        <div th:unless="${userDid != null}">
-           <p class="error-message">User DID not found. Issuance will proceed without a specific user DID.</p>
+        <!-- User DID Display -->
+        <div class="did-display">
+          <p th:if="${userDid != null}">
+            Your DID: <strong id="spnUserDid" th:text="${userDid}"></strong>
+          </p>
+          <p th:unless="${userDid != null}" class="error-message">
+            User DID not found. Issuance will proceed without a specific user
+            DID.
+          </p>
         </div>
 
-        <!-- Action Buttons/Info Area -->
-        <!-- divRequestVC is kept for JS targeting, but styling is handled by issuance-box -->
+        <!-- Issue Button -->
         <div id="divRequestVC">
-            <button class="submitButton" id="btnIssueVC">Issue VC</button>
+          <button class="submitButton" id="btnIssueVC">Issue VC</button>
         </div>
 
-        <!-- Response Area -->
+        <!-- Response Area 1 (Status/JSON - Currently Hidden) -->
         <div id="divResponse">
-            <!-- Status messages will appear here -->
+          <!-- Status messages (like loading/error) will appear here -->
+          <textarea id="jsonResponse" readonly></textarea>
         </div>
 
-        <!-- Offer Display Area (Initially Hidden) -->
-        <div id="divAcceptOfferVC" style="display:none;">
+        <!-- Offer Details (Shown after successful issuance) -->
+        <div id="divAcceptOfferVC" style="display: none">
           <p class="font-bold">Credential Offer URL:</p>
-          <div id="span_offer_url"></div> <!-- Populated by JS -->
+          <div id="span_offer_url"></div>
 
-          <div class="font-bold" id="tx_code_div" style="display: none;">
-              Transaction Code:
-              <div id="tx_code"></div> <!-- Populated by JS -->
+          <div class="font-bold" id="tx_code_div" style="display: none">
+            Transaction Code:
+            <div id="tx_code"></div>
+          </div>
+
+          <div class="font-bold" id="issuanceIdDiv" style="display: none">
+            Issuance ID:
+            <div id="issuanceId"></div>
           </div>
 
           <button
@@ -211,134 +248,352 @@
           >
             Claim VC
           </button>
-            <button
+          <button
             type="button"
             role="button"
             class="resetButton"
-            onclick="location.reload();"
+            onclick="window.location.reload()"
           >
             Reset
           </button>
         </div>
+      </div>
+      <!-- End issuance-box -->
+    </div>
+    <!-- End content-container -->
 
-      </div> <!-- End issuance-box -->
-    </div> <!-- End content-container -->
+    <!-- Claimed Credential Details Section (Shown after initial issuance) -->
+    <div
+      id="claimedDetailsContainer"
+      class="content-container"
+      style="display: none"
+    >
+      <div class="issuance-box">
+        <h3>Claimed Credential Details</h3>
 
+        <!-- Get Details Button -->
+        <div id="divRequestClaimedVC">
+          <button class="submitButton" id="btnClaimedVC">
+            Get Claimed VC Details
+          </button>
+        </div>
+
+        <!-- Response Area 2 (Status/JSON) -->
+        <div id="divClaimedResponse" style="display: none">
+          <!-- Status messages (like loading/error) and JSON will appear directly here -->
+        </div>
+
+        <!-- Reset Button for second section (Shown after getting details) -->
+        <div id="divClaimedReset" style="display: none; text-align: center">
+          <button
+            type="button"
+            role="button"
+            class="resetButton"
+            onclick="resetClaimedDetails()"
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+      <!-- End issuance-box -->
+    </div>
+    <!-- End content-container -->
   </body>
   <script>
-    // Get references to elements
+    // Get references to elements from the first section
     const issueButton = document.getElementById("btnIssueVC");
-    const requestDiv = document.getElementById("divRequestVC"); // Still needed for hiding/showing logic
+    const requestDiv = document.getElementById("divRequestVC");
     const acceptOfferDiv = document.getElementById("divAcceptOfferVC");
     const offerUrlSpan = document.getElementById("span_offer_url");
     const txCodeDiv = document.getElementById("tx_code_div");
     const txCodeSpan = document.getElementById("tx_code");
-    const responseDiv = document.getElementById("divResponse"); // Reference needed for status/errors
+    const issuanceIdDiv = document.getElementById("issuanceIdDiv");
+    const issuanceIdSpan = document.getElementById("issuanceId"); // Used to read/write the ID
+    const responseDiv = document.getElementById("divResponse");
+    const jsonResponseTextArea = document.getElementById("jsonResponse");
 
+    // Get reference to the second section's container
+    const claimedDetailsContainer = document.getElementById(
+      "claimedDetailsContainer"
+    );
+
+    // Get references for the second section
+    const claimedVcButton = document.getElementById("btnClaimedVC");
+    // const claimedJsonResponseTextArea = document.getElementById("claimedJsonResponse"); // No longer needed
+    const claimedResponseDiv = document.getElementById("divClaimedResponse");
+    const claimedResetDiv = document.getElementById("divClaimedReset");
+    const requestClaimedVcDiv = document.getElementById("divRequestClaimedVC");
+
+    /**
+     * Initiates the credential issuance process via API call.
+     * @param {string|null} userDid - The user's DID, or null if not available.
+     * @returns {Promise<object|null>} The API response object on success, or null on failure.
+     */
     async function startIssuance(userDid) {
-      // Clear previous results/status and hide offer section
-      responseDiv.innerHTML = '';
-      responseDiv.style.display = 'none';
-      acceptOfferDiv.style.display = 'none';
+      // Reset UI elements for the first section
+      responseDiv.innerHTML = ""; // Clear any previous status messages
+      responseDiv.appendChild(jsonResponseTextArea); // Ensure textarea is inside responseDiv
+      jsonResponseTextArea.value = "";
+      jsonResponseTextArea.style.display = "none";
+      // responseDiv.style.display = "none"; // Already hidden by default CSS
+      acceptOfferDiv.style.display = "none";
+      claimedDetailsContainer.style.display = "none"; // Ensure second section is hidden
 
       // Show loading state
-      responseDiv.innerHTML = '<p>Requesting credential issuance...</p>';
-      responseDiv.style.display = 'block';
+      const loadingMsg = document.createElement("p");
+      loadingMsg.textContent = "Requesting credential issuance...";
+      responseDiv.insertBefore(loadingMsg, jsonResponseTextArea);
+      responseDiv.style.display = "block";
       if (issueButton) issueButton.disabled = true;
 
       try {
         console.log("Sending userDid to API:", userDid);
-        const response = await fetch("/api/cis-issuance", {
+        const apiResponse = await fetch("/api/cis-issuance", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userDid: userDid }),
         });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({
-            message: `HTTP error! Status: ${response.status}`,
+        if (!apiResponse.ok) {
+          const errorData = await apiResponse.json().catch(() => ({
+            message: `HTTP error! Status: ${apiResponse.status}`,
           }));
           throw new Error(
             errorData.message ||
-              `Network response was not ok (${response.status})`
+              `Network response was not ok (${apiResponse.status})`
           );
         }
 
-        const result = await response.json();
+        const result = await apiResponse.json();
         console.log("Issuance API result:", result);
-        // Clear loading status on success before showing offer
-        responseDiv.innerHTML = "";
-        responseDiv.style.display = "none";
-        return result;
 
+        // Remove loading message
+        loadingMsg.remove();
+
+        // Display JSON response (but keep divResponse hidden)
+        jsonResponseTextArea.value = JSON.stringify(result, null, 2);
+        // jsonResponseTextArea.style.display = "block"; // Keep hidden unless needed
+        responseDiv.style.display = "none";
+
+        return result; // Return successful result
       } catch (error) {
-        console.error("There was a problem with the issuance fetch operation:", error);
-        // Display error in the response div
+        console.error(
+          "There was a problem with the issuance fetch operation:",
+          error
+        );
+        // Display error message (but keep divResponse hidden)
         responseDiv.innerHTML = `<p class="error-message">Error starting issuance: ${error.message}</p>`;
-        responseDiv.style.display = 'block'; // Ensure error is visible
+        jsonResponseTextArea.style.display = "none";
+        // responseDiv.style.display = "block"; // Keep hidden
         return null; // Indicate failure
       } finally {
-        // Re-enable button regardless of success or failure
-        // We will hide the button on success later, so disabling is enough here
-        if (issueButton) issueButton.disabled = false;
+        if (issueButton) issueButton.disabled = false; // Re-enable button
       }
     }
 
-    // Event Listener for Issue Button
+    // Event Listener for "Issue VC" Button
     if (issueButton) {
       issueButton.addEventListener("click", async (event) => {
         event.preventDefault();
 
         const didElm = document.getElementById("spnUserDid");
         const userDid = didElm ? didElm.innerText.trim() : null;
-
         console.log("User DID found on page:", userDid);
 
-        const response = await startIssuance(userDid);
+        const resultData = await startIssuance(userDid);
 
-        if (response && response.credentialOfferUri) {
-          // --- Success: Hide request button area, show offer details ---
-          requestDiv.style.display = "none"; // <<<--- ADD THIS LINE TO HIDE THE BUTTON'S CONTAINER
-          acceptOfferDiv.style.display = "block";
+        if (resultData && resultData.credentialOfferUri) {
+          // --- Success ---
+          requestDiv.style.display = "none"; // Hide "Issue VC" button area
+          acceptOfferDiv.style.display = "block"; // Show Offer details area
 
-          // Make offer URL a clickable link
-          offerUrlSpan.innerHTML = `<a href="${response.credentialOfferUri}" target="_blank" style="word-break: break-all;">${response.credentialOfferUri}</a>`;
+          // Show the second section container (Claimed Details)
+          claimedDetailsContainer.style.display = "flex";
+          // Ensure elements within the second section are in their initial state
+          if (requestClaimedVcDiv) requestClaimedVcDiv.style.display = "block"; // Show "Get Details" button
+          if (claimedResponseDiv) claimedResponseDiv.style.display = "none"; // Hide response area 2
+          if (claimedResetDiv) claimedResetDiv.style.display = "none"; // Hide reset button 2
 
-          // Display transaction code if present
-          if (response.txCode) {
-            txCodeSpan.innerText = response.txCode;
+          // Populate Offer Details
+          offerUrlSpan.innerHTML = `<a href="${resultData.credentialOfferUri}" target="_blank" style="word-break: break-all;">${resultData.credentialOfferUri}</a>`;
+
+          if (resultData.issuanceId) {
+            issuanceIdSpan.innerText = resultData.issuanceId;
+            issuanceIdDiv.style.display = "block";
+          } else {
+            issuanceIdSpan.innerText = "";
+            issuanceIdDiv.style.display = "none";
+          }
+          if (resultData.txCode) {
+            txCodeSpan.innerText = resultData.txCode;
             txCodeDiv.style.display = "block";
           } else {
+            txCodeSpan.innerText = "";
             txCodeDiv.style.display = "none";
           }
-        } else if (response) {
+        } else if (resultData) {
           // API call succeeded but didn't return the expected URI
-          responseDiv.innerHTML = `<p class="error-message">Issuance request processed, but no offer URI was returned. Response: ${JSON.stringify(response)}</p>`;
-          responseDiv.style.display = 'block';
-          requestDiv.style.display = 'block'; // Ensure request button area is visible on partial failure
-        }
-        // If response is null, the error is already shown by startIssuance
-        else {
-           requestDiv.style.display = 'block'; // Ensure request button area is visible on fetch failure
+          // Error message is already handled (but hidden) in startIssuance
+          requestDiv.style.display = "block"; // Keep "Issue VC" button visible
+          claimedDetailsContainer.style.display = "none"; // Keep second section hidden
+        } else {
+          // API call failed (error already handled (but hidden) by startIssuance)
+          requestDiv.style.display = "block"; // Keep "Issue VC" button visible
+          claimedDetailsContainer.style.display = "none"; // Keep second section hidden
         }
       });
     } else {
       console.warn("Issue VC button (btnIssueVC) not found in the DOM.");
     }
 
-    // Function for "Claim VC" Button (previously SaveVault_Click)
-    function SaveVault_Click() { // Consider renaming if it's more about claiming
+    // Function for "Claim VC" Button (Opens Vault)
+    function SaveVault_Click() {
       const offerLinkElement = document.querySelector("#span_offer_url a");
       if (offerLinkElement && offerLinkElement.href) {
         window.open(offerLinkElement.href, "_blank").focus();
       } else {
         console.error("Offer URL link not found or is not valid.");
+        // Show error (but keep divResponse hidden)
         responseDiv.innerHTML = `<p class="error-message">Could not find the offer URL to open.</p>`;
-        responseDiv.style.display = 'block';
+        jsonResponseTextArea.style.display = "none";
+        // responseDiv.style.display = 'block'; // Keep hidden
       }
     }
+
+    // Event Listener for "Get Claimed VC Details" button
+    if (claimedVcButton) {
+      claimedVcButton.addEventListener("click", async () => {
+        console.log("Get Claimed VC Details button clicked.");
+
+        const currentIssuanceIdElement = document.getElementById("issuanceId");
+        const issuanceId = currentIssuanceIdElement
+          ? currentIssuanceIdElement.innerText.trim()
+          : null;
+
+        if (!issuanceId) {
+          console.error("Issuance ID not found or is empty.");
+          claimedResponseDiv.innerHTML = `<p class="error-message">Error: Issuance ID is missing. Cannot fetch details.</p>`;
+          claimedResponseDiv.style.display = "block";
+          if (requestClaimedVcDiv) requestClaimedVcDiv.style.display = "block";
+          if (claimedResetDiv) claimedResetDiv.style.display = "none";
+          return;
+        }
+        console.log("Using Issuance ID:", issuanceId);
+
+        // Reset UI elements for the second section
+        claimedResponseDiv.innerHTML = ""; // Clear previous status/error
+        claimedResponseDiv.style.display = "none";
+        if (claimedResetDiv) claimedResetDiv.style.display = "none";
+        claimedVcButton.disabled = true;
+
+        // Show loading state
+        const loadingMsg = document.createElement("p");
+        loadingMsg.textContent = "Requesting claimed credential details...";
+        claimedResponseDiv.appendChild(loadingMsg); // Append loading message
+        claimedResponseDiv.style.display = "block";
+
+        try {
+          const apiResponse = await fetch("/api/get-claimed-credentials", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ issuanceId: issuanceId }),
+          });
+
+          console.log("Claimed VC API Response Status:", apiResponse.status);
+
+          if (!apiResponse.ok) {
+            let errorData = {
+              message: `HTTP error! Status: ${apiResponse.status}`,
+            };
+            try {
+              errorData = await apiResponse.json();
+            } catch (parseError) {
+              errorData.message = apiResponse.statusText || errorData.message;
+            }
+            throw new Error(
+              errorData.message ||
+                `Network response was not ok (${apiResponse.status})`
+            );
+          }
+
+          const result = await apiResponse.json();
+          console.log("Claimed VC API result:", result);
+
+          // --- UI Update on Success ---
+          loadingMsg.remove(); // Remove loading message
+
+          // Display JSON result directly inside the div, wrapped in <pre>
+          claimedResponseDiv.innerHTML = `<pre>${JSON.stringify(
+            result,
+            null,
+            2
+          )}</pre>`;
+
+          // Hide the "Get Details" button's container
+          if (requestClaimedVcDiv) requestClaimedVcDiv.style.display = "none";
+
+          // Show the reset button for the second section
+          if (claimedResetDiv) claimedResetDiv.style.display = "block";
+
+          claimedResponseDiv.style.display = "block"; // Ensure container is visible
+
+        } catch (error) {
+          console.error(
+            "There was a problem with the claimed VC fetch operation:",
+            error
+          );
+
+          // Display the error message (replace loading message)
+          claimedResponseDiv.innerHTML = `<p class="error-message">Error getting claimed VC: ${error.message}</p>`;
+          claimedResponseDiv.style.display = "block"; // Ensure error message is visible
+
+          // Keep the button visible/enabled on error
+          if (requestClaimedVcDiv) requestClaimedVcDiv.style.display = "block";
+          claimedVcButton.disabled = false; // Re-enable button
+          if (claimedResetDiv) claimedResetDiv.style.display = "none"; // Keep reset hidden
+
+        } finally {
+          // Re-enable button only if an error occurred AND the button container is still visible
+          if (
+            requestClaimedVcDiv &&
+            requestClaimedVcDiv.style.display !== "none"
+          ) {
+            claimedVcButton.disabled = false;
+          }
+        }
+      });
+    } else {
+      console.warn("Button with ID 'btnClaimedVC' not found.");
+    }
+
+    /**
+     * Resets the 'Claimed Credential Details' section to its initial state.
+     */
+    function resetClaimedDetails() {
+      console.log("Resetting claimed details section.");
+
+      // Hide the response area and clear its content
+      if (claimedResponseDiv) {
+        claimedResponseDiv.innerHTML = ""; // Clear any previous response or error
+        claimedResponseDiv.style.display = "none";
+      }
+
+      // Hide the reset button itself
+      if (claimedResetDiv) {
+        claimedResetDiv.style.display = "none";
+      }
+
+      // Show the button container for "Get Claimed VC Details"
+      if (requestClaimedVcDiv) {
+        requestClaimedVcDiv.style.display = "block";
+      }
+
+      // Ensure the "Get Claimed VC Details" button is enabled
+      if (claimedVcButton) {
+        claimedVcButton.disabled = false;
+      }
+    }
+
   </script>
 
 </html>
