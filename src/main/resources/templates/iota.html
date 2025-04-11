@@ -1,94 +1,128 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"> <!-- Added xmlns:th -->
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Iota</title>
+  <title>Iota Framework - Request VC</title> <!-- Updated Title -->
   <style>
+    /* --- General Body and Font Styles (from issuance.html) --- */
     body {
       font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
       margin: 0;
       padding: 20px;
-      background-color: #f4f4f4; /* Added a light background */
+      background-color: #f4f4f4;
     }
+
+    /* --- Header Styles (Consistent with issuance.html) --- */
     .header-container {
       display: flex;
-      justify-content: space-between; /* Space out title and links */
+      justify-content: space-between;
       align-items: center;
       padding-bottom: 20px;
       border-bottom: 1px solid #ccc;
       margin-bottom: 30px;
     }
     .header-container h3 {
-        margin: 0; /* Remove default margin */
+        margin: 0;
         font-size: x-large;
     }
     .nav-links {
-    display: flex; /* Align links in a row */
-    align-items: center; /* Vertically center the links */
-    gap: 15px; /* Add spacing between links */
-  }
-  .nav-links a {
-    text-decoration: none;
-    color: #333;
-    font-weight: bold;
-    padding: 5px 10px;
-    border-radius: 4px;
-    transition: background-color 0.3s ease;
-  }
-  .nav-links a:hover {
-    background-color: #eee;
-  }
-
-    .flex-container {
       display: flex;
-      height: 100%;
-      justify-content: center;
       align-items: center;
-      font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+      gap: 15px;
     }
-
-    .flex-container>div {
-      border: 1px;
-    }
-
-    .font-bold {
-      font-size: large;
-      padding: 10px;
-      border-radius: 8px;
+    .nav-links a {
+      text-decoration: none;
+      color: #333;
       font-weight: bold;
+      padding: 5px 10px;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+    .nav-links a:hover {
+      background-color: #eee;
     }
 
-    .font-large {
-      font-size: x-large;
-    }
-
-    .form-div {
+    /* --- Content Area Styles (from issuance.html) --- */
+    .content-container {
       display: flex;
-      flex-direction: column;
-      height: 500px;
-      width: 400px;
-      font-size: medium;
+      justify-content: center;
+      align-items: flex-start; /* Changed from center to align box at top */
+      margin-bottom: 30px;
+    }
+    .iota-box { /* Renamed from form-div and styled like issuance-box */
       background-color: #fff;
-      padding: 20px;
+      padding: 30px;
       border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+      width: 600px; /* Adjusted width */
+      max-width: 90%;
+      text-align: center; /* Center content within the box */
+    }
+    .iota-box h3 { /* Style for the title inside the box */
+      margin-top: 0;
+      margin-bottom: 20px;
+      color: #d9534f; /* Using red color like issuance */
+      text-align: center;
     }
 
+    /* --- Button Styles (from issuance.html) --- */
     .submitButton {
-      background-color: #4caf50;
+      background-color: #4caf50; /* Green */
       color: white;
       padding: 14px 20px;
-      margin: 8px 0;
+      margin: 20px 5px 8px 5px; /* Adjusted margin */
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      width: auto; /* Auto width */
+      min-width: 150px; /* Minimum width */
+      font-size: 16px;
+      transition: background-color 0.3s ease;
     }
+    .submitButton:hover {
+      background-color: #45a049;
+    }
+    .submitButton:disabled { /* Style for disabled button */
+        background-color: #cccccc;
+        cursor: not-allowed;
+    }
+
+    /* --- Response Area Styles (from issuance.html) --- */
+    #divResponse {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+      display: none; /* Initially hidden */
+      text-align: left; /* Align text left for readability */
+      width: auto; /* Let it take the width of the container */
+      overflow: visible; /* Remove previous overflow */
+      word-break: break-all; /* Break long words/strings */
+      font-size: 1.1em; /* Default font size */
+    }
+    /* Style for <pre> tag used for JSON output */
+    #divResponse pre {
+        margin: 0;
+        white-space: pre-wrap; /* Allow wrapping */
+        word-break: break-all; /* Break long lines */
+        font-size: 0.9em; /* Slightly smaller font for JSON */
+    }
+    .error-message { /* Added error message style */
+      color: red;
+      font-weight: bold;
+    }
+
+    /* --- Removed Unused Styles --- */
+    /* .flex-container, .font-bold, .font-large, .form-div removed */
+
   </style>
 </head>
 
 <body>
+    <!-- Header -->
     <div class="header-container">
       <h3>Affinidi Reference App</h3>
       <div class="nav-links">
@@ -96,52 +130,115 @@
         <a href="/issuance">Issuance</a>
         <a href="/iota">Iota</a>
         <a href="/verify">Verify</a>
-        <div th:if="${userDid != null}">
-          <a href="/user">User Info</a>
-        </div>
+        <!-- Thymeleaf conditional links -->
+        <a th:if="${userDid != null}" href="/user">User Info</a>
         <a th:if="${userDid != null}" href="/logout">Logout</a>
       </div>
     </div>
-  <div style="display: flex; flex-direction: column">
-    <div class="flex-container flex-direction: column; ">
-      <h3 class="font-large">Affinidi Iota Framework</h3>
-    </div>
-    <div class="flex-container">
-      <div class="font-bold">
-        <h3 class="font-bold" style="color: red;">Request for Insurance Registration VC</h3>
-        <button class="submitButton" id="btnRequestVC">Request VC </button>
-        <div id="divResponse" style="display:none;width: 600px;overflow: auto;">
-        </div>
-      </div>
-    </div>
+
+    <!-- Iota Content Section -->
+    <div class="content-container">
+        <div class="iota-box"> <!-- Using the new styled box -->
+            <h3>Request for Insurance Registration VC</h3> <!-- Title inside the box -->
+
+            <!-- Request Button -->
+            <button class="submitButton" id="btnRequestVC">Request VC</button>
+
+            <!-- Response Area -->
+            <div id="divResponse" style="display:none;">
+                <!-- Content will be added by JavaScript -->
+            </div>
+        </div> <!-- End iota-box -->
+    </div> <!-- End content-container -->
+
 </body>
 <script>
 
-  async function iotaInit(nonce) {
-    try {
+  // Get references to elements
+  const requestButton = document.getElementById('btnRequestVC');
+  const responseDiv = document.getElementById('divResponse');
 
+  /**
+   * Displays messages or data in the response div.
+   * @param {string} content - The HTML or text content to display.
+   * @param {boolean} isError - Optional. True if the content is an error message.
+   */
+  function showResponse(content, isError = false) {
+    if (!responseDiv) return;
+    if (content) {
+        if (isError) {
+            responseDiv.innerHTML = `<p class="error-message">${content}</p>`;
+        } else if (content.startsWith('{') || content.startsWith('[')) { // Basic check for JSON
+             try {
+                // Attempt to parse and prettify JSON
+                const jsonData = JSON.parse(content);
+                responseDiv.innerHTML = `<pre>${JSON.stringify(jsonData, null, 2)}</pre>`;
+            } catch (e) {
+                // If parsing fails, display as plain text wrapped in pre
+                responseDiv.innerHTML = `<pre>${content}</pre>`;
+            }
+        }
+         else {
+            // Display plain text (like "Processing...")
+            responseDiv.innerHTML = `<p>${content}</p>`;
+        }
+        responseDiv.style.display = 'block';
+    } else {
+        // Hide response area if content is empty/null
+        responseDiv.innerHTML = '';
+        responseDiv.style.display = 'none';
+    }
+  }
+
+  /**
+   * Handles the IOTA initiation API call.
+   * @param {string} nonce - A unique nonce for the request.
+   * @returns {Promise<object|null>} The API response data on success, or null on failure.
+   */
+  async function iotaInit(nonce) {
+    showResponse("Initiating Iota request..."); // Show user feedback
+    if (requestButton) requestButton.disabled = true; // Disable button
+
+    try {
       const response = await fetch('/api/iota-init', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        // Send nonce and the current URL without query params as redirectUrl
         body: JSON.stringify({ "nonce": nonce, "redirectUrl": window.location.href.split('?')[0] }),
       });
 
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        throw new Error(errorData.message || `Network response was not ok (${response.status})`);
       }
 
       const result = await response.json();
-      console.log('result', result);
+      console.log('Iota Init API result:', result);
+      // Assuming the actual data might be nested under 'data'
       return result.data || result;
     } catch (error) {
-      alert('There is an error, check server/console logs')
-      console.error('There was a problem with the fetch operation:', error);
+      console.error('There was a problem with the iota-init fetch operation:', error);
+      showResponse(`Error initiating Iota: ${error.message}`, true); // Show error to user
+      return null; // Indicate failure
+    } finally {
+       // Re-enable button only if we are not redirecting
+       // The redirection happens outside this function if successful
+       // if (requestButton) requestButton.disabled = false; // Re-enable button
     }
   }
 
+  /**
+   * Handles the IOTA callback API call.
+   * @param {object} iotaRedirect - Stored data containing nonce, correlationId, transactionId.
+   * @param {string} responseCode - The response code from the redirect URL.
+   * @returns {Promise<object|null>} The API response data on success, or null on failure.
+   */
   async function iotaCallback(iotaRedirect, responseCode) {
+    showResponse("Processing Iota callback..."); // Show user feedback
+    if (requestButton) requestButton.style.display = 'none'; // Hide button during processing
+
     try {
       const params = { ...iotaRedirect, responseCode };
       const response = await fetch('/api/iota-callback', {
@@ -151,81 +248,148 @@
         },
         body: JSON.stringify(params),
       });
+
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        throw new Error(errorData.message || `Network response was not ok (${response.status})`);
       }
 
       const result = await response.json();
-      console.log('result', result);
+      console.log('Iota Callback API result:', result);
+       // Assuming the actual data might be nested under 'data'
       return result.data || result;
     } catch (error) {
-      alert('There is an error, check server/console logs')
-      console.error('There was a problem with the fetch operation:', error);
+      console.error('There was a problem with the iota-callback fetch operation:', error);
+      showResponse(`Error processing Iota callback: ${error.message}`, true); // Show error to user
+      return null; // Indicate failure
+    } finally {
+        // Button visibility is handled after the promise resolves in the main logic
     }
   }
 
-  document.getElementById('btnRequestVC').addEventListener('click', async (event) => {
-    event.preventDefault();
-    showResponse('Processing...');
-    const nonce = crypto.randomUUID().replace(/-/g, '').slice(0, 10);
-    var response = await iotaInit(nonce);
-    if (!response.correlationId || !response.transactionId) {
-      console.error('Error response', response);
-      alert('There is error on iota initiate request');
-      showResponse(JSON.stringify(response, null, 2));
-      return;
-    }
-    console.log('response', response);
+  // --- Main Logic ---
 
-    const toStore = {
-      nonce,
-      correlationId: response.correlationId,
-      transactionId: response.transactionId,
-    };
+  // Event Listener for "Request VC" Button
+  if (requestButton) {
+      requestButton.addEventListener('click', async (event) => {
+        event.preventDefault();
+        showResponse('Processing...'); // Initial feedback
+        requestButton.disabled = true; // Disable button immediately
 
-    localStorage.setItem("iotaRedirect", JSON.stringify(toStore));
+        const nonce = crypto.randomUUID().replace(/-/g, '').slice(0, 10);
+        const initResponse = await iotaInit(nonce); // Call the init function
 
-    const divResponse = document.getElementById("divResponse");
-    divResponse.style.display = "";
+        if (initResponse && initResponse.correlationId && initResponse.transactionId && initResponse.jwt) {
+          console.log('Iota initiation successful:', initResponse);
 
-    var url = `https://vault.affinidi.com/login?request=${response.jwt}`;
+          const toStore = {
+            nonce,
+            correlationId: initResponse.correlationId,
+            transactionId: initResponse.transactionId,
+          };
 
-    window.location.href = url;
+          // Store necessary details for the callback
+          localStorage.setItem("iotaRedirect", JSON.stringify(toStore));
 
-  });
+          // Redirect the user to the Affinidi Vault login page
+          const vaultUrl = `https://vault.affinidi.com/login?request=${initResponse.jwt}`;
+          showResponse(`Redirecting to Affinidi Vault... <a href="${vaultUrl}">Click here if not redirected</a>`); // Update status
+          window.location.href = vaultUrl;
+          // Button remains disabled as we are redirecting
 
+        } else {
+          console.error('Error during Iota initiation or missing data in response:', initResponse);
+          // Error message is already shown by iotaInit function
+          if (requestButton) requestButton.disabled = false; // Re-enable button on failure
+        }
+      });
+  } else {
+      console.warn("Request VC button (btnRequestVC) not found.");
+  }
+
+
+  // Check for callback parameters in the URL on page load
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.has('response_code')) {
-    showResponse('Processing...');
-    document.getElementById('btnRequestVC').style.display = 'none';
+    showResponse('Processing callback...'); // Show processing message
+    if (requestButton) requestButton.style.display = 'none'; // Hide button
+
     const responseCode = urlParams.get('response_code');
     console.log('Found response_code:', responseCode);
+
     const iotaRedirectString = localStorage.getItem("iotaRedirect") || "{}";
-    const iotaRedirect = JSON.parse(iotaRedirectString);
+    let iotaRedirect = {};
+    try {
+        iotaRedirect = JSON.parse(iotaRedirectString);
+    } catch (e) {
+        console.error("Error parsing iotaRedirect from localStorage", e);
+        showResponse("Error: Could not retrieve necessary data to process callback.", true);
+        if (requestButton) requestButton.style.display = 'block'; // Show button again
+        // Clean up URL params even on error
+        urlParams.delete('response_code');
+        window.history.replaceState({}, '', `${window.location.pathname}${urlParams.toString()}`);
+        // Stop further processing
+        throw new Error("Failed to parse localStorage data."); // Throw to prevent further execution in this block
+    }
 
-    //Call API
-    iotaCallback(iotaRedirect, responseCode).then(response => {
-      document.getElementById('btnRequestVC').style.display = '';
-      urlParams.delete('response_code');
-      window.history.replaceState({}, '', `${window.location.pathname}`);
-      if (!response?.vpToken) {
-        showResponse();
-        console.error('Error response', response);
-        return;
-      }
-      console.log('response', response);
 
-      const vpToken = JSON.parse(response.vpToken);
-      showResponse(JSON.stringify(vpToken, null, 2));
-    });
+    // Check if we have the required data from localStorage
+    if (!iotaRedirect.nonce || !iotaRedirect.correlationId || !iotaRedirect.transactionId) {
+        console.error("Missing required data (nonce, correlationId, or transactionId) from localStorage.");
+        showResponse("Error: Missing required data to process callback. Please try the request again.", true);
+        if (requestButton) requestButton.style.display = 'block';
+        localStorage.removeItem("iotaRedirect"); // Clean up potentially corrupt data
+        // Clean up URL params
+        urlParams.delete('response_code');
+        window.history.replaceState({}, '', `${window.location.pathname}${urlParams.toString()}`);
+    } else {
+        // Call the callback API function
+        iotaCallback(iotaRedirect, responseCode).then(callbackResponse => {
+          // Always clean up localStorage and URL regardless of success/failure
+          localStorage.removeItem("iotaRedirect");
+          urlParams.delete('response_code');
+          window.history.replaceState({}, '', `${window.location.pathname}${urlParams.toString()}`); // Use toString() in case other params exist
+
+          if (callbackResponse && callbackResponse.vpToken) {
+            console.log('Callback successful, VP Token received:', callbackResponse.vpToken);
+            try {
+                // Attempt to parse the vpToken string into an object for display
+                const vpTokenObject = JSON.parse(callbackResponse.vpToken);
+                showResponse(JSON.stringify(vpTokenObject, null, 2)); // Display formatted JSON
+            } catch (parseError) {
+                console.error("Failed to parse vpToken JSON:", parseError);
+                showResponse(callbackResponse.vpToken); // Display as raw string if parsing fails
+            }
+          } else if (callbackResponse) {
+             // Callback API succeeded but didn't return expected data
+             console.warn('Callback response received, but vpToken is missing:', callbackResponse);
+             showResponse("Callback processed, but no Verifiable Presentation received.", true); // Show a specific message
+          } else {
+            // Callback API call failed, error message already shown by iotaCallback
+            console.error('Iota callback failed.');
+          }
+
+          // Show the request button again after processing
+          if (requestButton) {
+              requestButton.style.display = 'inline-block'; // Use inline-block or block as appropriate
+              requestButton.disabled = false; // Ensure it's enabled
+          }
+
+        }).catch(error => {
+            // Catch any unexpected errors during the callback promise chain
+            console.error("Unhandled error during callback processing:", error);
+            showResponse(`An unexpected error occurred: ${error.message}`, true);
+            // Ensure cleanup and button visibility even in this case
+            localStorage.removeItem("iotaRedirect");
+            urlParams.delete('response_code');
+            window.history.replaceState({}, '', `${window.location.pathname}${urlParams.toString()}`);
+            if (requestButton) {
+                requestButton.style.display = 'inline-block';
+                requestButton.disabled = false;
+            }
+        });
+    }
   }
-
-  function showResponse(data) {
-    const divResponse = document.getElementById('divResponse')
-    divResponse.style.display = '';
-    divResponse.innerHTML = '<pre>' + data + '</pre>';
-  }
-
 
 </script>
 
