@@ -13,7 +13,12 @@ import com.nimbusds.jose.shaded.gson.internal.LinkedTreeMap;
 public class UserController {
 
     @GetMapping("/")
-    public String index() {
+    public String index(Model model, @AuthenticationPrincipal OidcUser oidcUser) {
+        if (oidcUser != null) {
+            var userDid = oidcUser.getSubject();
+            System.out.println("userDid " + userDid);
+            model.addAttribute("userDid", userDid);
+        }
         return "index";
     }
 
@@ -26,8 +31,12 @@ public class UserController {
      * @return
      */
     @GetMapping("/user")
-    public String user(Model model,
-            @AuthenticationPrincipal OidcUser oidcUser) {
+    public String user(Model model, @AuthenticationPrincipal OidcUser oidcUser) {
+        if (oidcUser != null) {
+            var userDid = oidcUser.getSubject();
+            System.out.println("userDid " + userDid);
+            model.addAttribute("userDid", userDid);
+        }
         @SuppressWarnings("unchecked")
         ArrayList<LinkedTreeMap<String, Object>> customNodeFromToken = (ArrayList<LinkedTreeMap<String, Object>>) oidcUser
                 .getAttributes().get("custom");
@@ -36,8 +45,7 @@ public class UserController {
     }
 
     @GetMapping("/issuance")
-    public String issuance(Model model,
-            @AuthenticationPrincipal OidcUser oidcUser) {
+    public String issuance(Model model, @AuthenticationPrincipal OidcUser oidcUser) {
         if (oidcUser != null) {
             var userDid = oidcUser.getSubject();
             System.out.println("userDid " + userDid);
@@ -47,16 +55,25 @@ public class UserController {
     }
 
     @GetMapping("/iota")
-    public String iota(Model model) {
+
+    public String iota(Model model, @AuthenticationPrincipal OidcUser oidcUser) {
+        if (oidcUser != null) {
+            var userDid = oidcUser.getSubject();
+            System.out.println("userDid " + userDid);
+            model.addAttribute("userDid", userDid);
+        }
         return "iota";
     }
 
     @GetMapping("/verify")
-    public String verify(Model model) {
+    public String verify(Model model, @AuthenticationPrincipal OidcUser oidcUser) {
+        if (oidcUser != null) {
+            var userDid = oidcUser.getSubject();
+            System.out.println("userDid " + userDid);
+            model.addAttribute("userDid", userDid);
+        }
         return "verify";
     }
-
-
 
     /**
      * This method extracts every populated attribute from custom node of idToken

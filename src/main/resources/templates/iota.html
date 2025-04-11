@@ -23,18 +23,22 @@
     .header-container h3 {
         margin: 0; /* Remove default margin */
     }
-    .nav-links a {
-        margin-left: 15px; /* Space out nav links */
-        text-decoration: none;
-        color: #333;
-        font-weight: bold;
-        padding: 5px 10px;
-        border-radius: 4px;
-        transition: background-color 0.3s ease;
-    }
-    .nav-links a:hover {
-        background-color: #eee;
-    }
+    .nav-links {
+    display: flex; /* Align links in a row */
+    align-items: center; /* Vertically center the links */
+    gap: 15px; /* Add spacing between links */
+  }
+  .nav-links a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+  }
+  .nav-links a:hover {
+    background-color: #eee;
+  }
 
     .flex-container {
       display: flex;
@@ -84,14 +88,19 @@
 </head>
 
 <body>
-      <div class="header-container">
-    <h3>Affinidi Iota Framework</h3>
-    <div class="nav-links">
-      <a href="/">Home</a>
-      <a href="/issuance">Issuance</a>
-      <a href="/verify">Verify</a>
+    <div class="header-container">
+      <h3>Affinidi Reference App</h3>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/issuance">Issuance</a>
+        <a href="/iota">Iota</a>
+        <a href="/verify">Verify</a>
+        <div th:if="${userDid != null}">
+          <a href="/user">User Info</a>
+        </div>
+        <a th:if="${userDid != null}" href="/logout">Logout</a>
+      </div>
     </div>
-  </div>
   <div style="display: flex; flex-direction: column">
     <div class="flex-container flex-direction: column; ">
       <h3 class="font-large">Affinidi Iota Framework</h3>
