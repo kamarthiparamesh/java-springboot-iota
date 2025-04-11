@@ -37,10 +37,12 @@ public class UserController {
             System.out.println("userDid " + userDid);
             model.addAttribute("userDid", userDid);
         }
-        @SuppressWarnings("unchecked")
-        ArrayList<LinkedTreeMap<String, Object>> customNodeFromToken = (ArrayList<LinkedTreeMap<String, Object>>) oidcUser
-                .getAttributes().get("custom");
-        populateModel(customNodeFromToken, model);
+        if (oidcUser != null) {
+            @SuppressWarnings("unchecked")
+            ArrayList<LinkedTreeMap<String, Object>> customNodeFromToken = (ArrayList<LinkedTreeMap<String, Object>>) oidcUser
+                    .getAttributes().get("custom");
+            populateModel(customNodeFromToken, model);
+        }
         return "user";
     }
 
