@@ -21,23 +21,14 @@ import com.affinidi.tdk.iota.client.models.FetchIOTAVPResponseInput;
 import com.affinidi.tdk.iota.client.models.FetchIOTAVPResponseOK;
 import com.affinidi.tdk.iota.client.models.InitiateDataSharingRequestInput;
 import com.affinidi.tdk.iota.client.models.InitiateDataSharingRequestOK;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.affinidi.tdk.iota.client.models.InitiateDataSharingRequestInput.ModeEnum;
 import com.affinidi.tdk.credential.issuance.client.models.StartIssuanceInputDataInner;
 import com.affinidi.tdk.credential.issuance.client.models.StartIssuanceResponse;
-
-import com.affinidi.tdk.credential.verification.client.models.VerifyCredentialInput;
-import com.affinidi.tdk.credential.verification.client.models.VerifyCredentialOutput;
-import com.affinidi.tdk.credential.verification.client.models.W3cCredential;
-import com.affinidi.tdk.credential.verification.client.models.W3cCredentialCredentialSchema;
-import com.affinidi.tdk.credential.verification.client.models.W3cCredentialCredentialSubject;
-import com.affinidi.tdk.credential.verification.client.models.W3cCredentialHolder;
-import com.affinidi.tdk.credential.verification.client.models.W3cCredentialStatus;
-import com.affinidi.tdk.credential.verification.client.models.W3cPresentationContext;
-import com.affinidi.tdk.credential.verification.client.models.W3cProof;
-import org.json.JSONObject;
-
-import com.affinidi.tdk.credential.verification.client.apis.DefaultApi;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.client.RestTemplate;
 
 public class Utils {
 
@@ -164,30 +155,30 @@ public class Utils {
             return "Invalid credential data";
         }
         try {
-            com.affinidi.tdk.credential.verification.client.ApiClient verificationClient = com.affinidi.tdk.credential.verification.client.Configuration
-                    .getDefaultApiClient();
-
-            // Configure API key authorization: ProjectTokenAuth
-            com.affinidi.tdk.credential.verification.client.auth.ApiKeyAuth ProjectTokenAuth = (com.affinidi.tdk.credential.verification.client.auth.ApiKeyAuth) verificationClient
-                    .getAuthentication("ProjectTokenAuth");
             // Create a authentication token
             String projectToken = getAuthorizationToken();
-            ProjectTokenAuth.setApiKey(projectToken);
             System.out.println("Project Token : " + projectToken);
 
-            ObjectMapper mapper = new ObjectMapper();
-            // Convert JSON string to W3cCredential object
-            Object w3cCredential = mapper.readValue(credentialData, Object.class);
-            System.out.println("Credential : " + w3cCredential.toString());
+            String verifierUrl =  "https://apse1.api.affinidi.io/ver/v1/verifier/verify-vcs";
+            System.out.println("Verifier URL : " + verifierUrl);
+
+            HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                headers.set("Authorization", "Bearer " + projectToken);
+                headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
 
 
-            VerifyCredentialInput verifyCredentialInput = new VerifyCredentialInput();
-            verifyCredentialInput.addVerifiableCredentialsItem((W3cCredential) w3cCredential);
-            // Initialize the API client
-            DefaultApi apiInstance = new DefaultApi(verificationClient);
-            VerifyCredentialOutput response = apiInstance.verifyCredentials(verifyCredentialInput);
-            System.out.println("Verification response : " + response.toString());
-            return response.toString();
+            RestTemplate restTemplate = new RestTemplate();
+            String requestBody = "{ \"verifiableCredentials\": [" + credentialData + "]}";
+            System.out.println("Request Body : " + requestBody);
+
+            HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+
+            String response = restTemplate.postForObject(verifierUrl, requestEntity, String.class);
+
+
+            System.out.println("Response : " + response);
+            return response;
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -197,4 +188,3 @@ public class Utils {
 
 
 }
-

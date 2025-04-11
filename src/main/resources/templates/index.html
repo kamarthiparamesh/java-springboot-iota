@@ -6,6 +6,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login Page</title>
   <style>
+    body {
+        font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
+          "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f4f4f4; /* Added a light background */
+      }
+      .header-container {
+        display: flex;
+        justify-content: space-between; /* Space out title and links */
+        align-items: center;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #ccc;
+        margin-bottom: 30px;
+      }
+      .header-container h3 {
+        margin: 0; /* Remove default margin */
+      }
+        .nav-links {
+    display: flex; /* Align links in a row */
+    align-items: center; /* Vertically center the links */
+    gap: 15px; /* Add spacing between links */
+  }
+  .nav-links a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+  }
+  .nav-links a:hover {
+    background-color: #eee;
+  }
+
     .flex-container {
       display: flex;
       height: 100%;
@@ -105,15 +140,17 @@
 </head>
 
 <body>
+      <div class="header-container">
+      <h3>Affinidi Reference App</h3>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/iota">Iota</a>
+        <a href="/verify">Verify</a>
+    </div>
+
   <div style="display: flex; flex-direction: column">
     <div class="flex-container flex-direction: column;">
       <h1 style="font-size: x-large;">Your Insurance Provider</h1>
-      &nbsp;
-      <div class="font-bold"><a href="/issuance">VC Issuance</a></div>
-      &nbsp;
-      <div class="font-bold"><a href="/iota">Iota</a></div>
-      &nbsp;
-      <div class="font-bold"><a href="/verify">Verification</a></div>
     </div>
 
 

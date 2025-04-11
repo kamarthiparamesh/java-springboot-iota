@@ -1,140 +1,287 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CIS</title>
+    <style>
+      body {
+        font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
+          "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f4f4f4; /* Added a light background */
+      }
+      .header-container {
+        display: flex;
+        justify-content: space-between; /* Space out title and links */
+        align-items: center;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #ccc;
+        margin-bottom: 30px;
+      }
+      .header-container h3 {
+        margin: 0; /* Remove default margin */
+      }
+        .nav-links {
+    display: flex; /* Align links in a row */
+    align-items: center; /* Vertically center the links */
+    gap: 15px; /* Add spacing between links */
+  }
+  .nav-links a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+  }
+  .nav-links a:hover {
+    background-color: #eee;
+  }
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CIS</title>
-  <style>
-    .flex-container {
-      display: flex;
-      height: 100%;
-      justify-content: center;
-      align-items: center;
-      font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-    }
+      .flex-container {
+        display: flex;
+        height: 100%;
+        justify-content: center;
+        align-items: center;
+        font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
+          "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
+      }
 
-    .flex-container>div {
-      border: 1px;
-    }
+      .flex-container > div {
+        border: 1px;
+      }
 
-    .font-bold {
-      font-size: large;
-      padding: 10px;
-      border-radius: 8px;
-      font-weight: bold;
-    }
+      .font-bold {
+        font-size: large;
+        padding: 10px;
+        border-radius: 8px;
+        font-weight: bold;
+      }
 
-    .font-large {
-      font-size: x-large;
-    }
+      .font-large {
+        font-size: x-large;
+      }
 
-    .form-div {
-      display: flex;
-      flex-direction: column;
-      height: 500px;
-      width: 400px;
-      font-size: medium;
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
+      .form-div {
+        display: flex;
+        flex-direction: column;
+        height: 500px;
+        width: 400px;
+        font-size: medium;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
 
-    .submitButton {
-      background-color: #4caf50;
-      color: white;
-      padding: 14px 20px;
-      margin: 8px 0;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-  </style>
-</head>
+      .submitButton {
+        background-color: #4caf50;
+        color: white;
+        padding: 14px 20px;
+        margin: 8px 0;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
 
-<body>
-  <div style="display: flex; flex-direction: column">
-    <div class="flex-container flex-direction: column; ">
-      <h3 class="font-large">Affinidi Credential Issuance</h3>
-      <div class="font-bold"><a href="/">Home</a></div>
-      <div class="font-bold"><a href="/iota">Iota</a></div>
-      <div th:if="${userDid != null}" class="font-bold"><a href="/user">User Info</a></div>
-      <div th:if="${userDid != null}" class="font-bold"><a href="/logout">Logout</a></div>
-    </div>
-    <div class="flex-container">
-      <div class="font-bold">
-        <h3 class="font-bold" style="color: red;">Issuing VC for Insurance Registration</h3>
+  <body>
+    <div class="header-container">
+      <h3>Affinidi Credential Issuance</h3>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/iota">Iota</a>
+        <a href="/verify">Verify</a>
         <div th:if="${userDid != null}">
-          <div class="font-bold">DID : <span th:text="${userDid}" id="spnUserDid" /></div>
+          <a href="/user">User Info</a>
         </div>
-        <div class="font-bold" id="divRequestVC"><button class="submitButton" id="btnIssueVC">Issue VC </button></div>
-        <div id="divAcceptOfferVC" style="display:none">
-          <div class="font-bold">Your Offer URL : <div id="span_offer_url"></div>
+        <a th:if="${userDid != null}" href="/logout">Logout</a>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column">
+      <div class="flex-container flex-direction: column;">
+        <h3 class="font-large">Affinidi Credential Issuance</h3>
+
+      </div>
+      <div class="flex-container">
+        <div class="font-bold">
+          <h3 class="font-bold" style="color: red">
+            Issuing VC for Insurance Registration
+          </h3>
+          <div th:if="${userDid != null}">
+            <div class="font-bold">
+              DID : <span th:text="${userDid}" id="spnUserDid" />
+            </div>
           </div>
-          <div class="font-bold" id="tx_code_div" style="display: none;">Transaction Code : <div id="tx_code"></div>
+          <div class="font-bold" id="divRequestVC">
+            <button class="submitButton" id="btnIssueVC">Issue VC</button>
           </div>
-          <div class="font-bold"> <button type="button" role="button" class="submitButton"
-              onclick="SaveVault_Click()">Save to Vault</button>
+          <div id="divAcceptOfferVC" style="display: none">
+            <div class="font-bold">
+              Your Offer URL :
+              <div id="span_offer_url"></div>
+            </div>
+            <div class="font-bold" id="tx_code_div" style="display: none">
+              Transaction Code :
+              <div id="tx_code"></div>
+            </div>
+            <div class="font-bold">
+              <button
+                type="button"
+                role="button"
+                class="submitButton"
+                onclick="SaveVault_Click()"
+              >
+                Save to Vault
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</body>
-<script>
+  </body>
+  <script>
+    // Get references to elements (Added for clarity, assuming they exist as before)
+    const issueButton = document.getElementById("btnIssueVC");
+    const requestDiv = document.getElementById("divRequestVC");
+    const acceptOfferDiv = document.getElementById("divAcceptOfferVC");
+    const offerUrlSpan = document.getElementById("span_offer_url");
+    const txCodeDiv = document.getElementById("tx_code_div");
+    const txCodeSpan = document.getElementById("tx_code");
+    // No need for responseDiv or userDidSpan references here as they are accessed directly below
 
-  async function startIssuance(userDid) {
-    try {
-      const response = await fetch('/api/cis-issuance', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ "userDid": userDid }),
+    async function startIssuance(userDid) {
+      // Added basic status display and button disabling for better UX
+      const responseDiv = document.getElementById("divResponse") || {
+        innerHTML: "",
+        style: {},
+      }; // Graceful handling if divResponse doesn't exist
+      responseDiv.innerHTML = "<p>Requesting credential issuance...</p>";
+      responseDiv.style.display = "block";
+      if (issueButton) issueButton.disabled = true;
+
+      try {
+        console.log("Sending userDid to API:", userDid); // Log what's being sent
+        const response = await fetch("/api/cis-issuance", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          // Send userDid (which might be null or empty)
+          body: JSON.stringify({ userDid: userDid }),
+        });
+
+        if (!response.ok) {
+          // Try to parse error response from server
+          const errorData = await response
+            .json()
+            .catch(() => ({
+              message: `HTTP error! Status: ${response.status}`,
+            }));
+          throw new Error(
+            errorData.message ||
+              `Network response was not ok (${response.status})`
+          );
+        }
+
+        const result = await response.json();
+        console.log("Issuance API result:", result);
+        // Clear status on success before showing offer
+        responseDiv.innerHTML = "";
+        responseDiv.style.display = "none";
+        return result;
+      } catch (error) {
+        console.error(
+          "There was a problem with the issuance fetch operation:",
+          error
+        );
+        // Display error in the response div
+        responseDiv.innerHTML = `<p class="error-message" style="color: red; font-weight: bold;">Error starting issuance: ${error.message}</p>`;
+        responseDiv.style.display = "block";
+        // Avoid alert
+        // alert('There is an error, check server/console logs')
+        return null; // Indicate failure
+      } finally {
+        // Re-enable button regardless of success or failure
+        if (issueButton) issueButton.disabled = false;
+      }
+    }
+
+    // Check if the button exists before adding listener
+    if (issueButton) {
+      issueButton.addEventListener("click", async (event) => {
+        event.preventDefault();
+
+        // --- MODIFIED PART ---
+        // Attempt to get userDid, but proceed even if it's not found.
+        const didElm = document.getElementById("spnUserDid");
+        const userDid = didElm ? didElm.innerText.trim() : null; // Use null if element not found
+
+        console.log("User DID found on page:", userDid); // Log if DID was found
+
+        // Call startIssuance, passing the potentially null userDid.
+        // The backend API (/api/cis-issuance) must handle cases where userDid is null or empty.
+        const response = await startIssuance(userDid);
+
+        // --- END MODIFIED PART ---
+
+        if (response && response.credentialOfferUri) {
+          // Success: Hide request button, show offer details
+          if (requestDiv) requestDiv.style.display = "none";
+          if (acceptOfferDiv) acceptOfferDiv.style.display = "block"; // Use block for visibility
+          if (offerUrlSpan) {
+            // Make it a clickable link
+            offerUrlSpan.innerHTML = `<a href="${response.credentialOfferUri}" target="_blank" style="word-break: break-all;">${response.credentialOfferUri}</a>`;
+          }
+
+          // Display transaction code if present
+          if (response.txCode) {
+            if (txCodeSpan) txCodeSpan.innerText = response.txCode;
+            if (txCodeDiv) txCodeDiv.style.display = "block"; // Use block
+          } else {
+            if (txCodeDiv) txCodeDiv.style.display = "none"; // Hide if not present
+          }
+        } else if (response) {
+          // API call succeeded but didn't return the expected URI
+          const responseDiv = document.getElementById("divResponse") || {
+            innerHTML: "",
+            style: {},
+          };
+          responseDiv.innerHTML = `<p class="error-message" style="color: red; font-weight: bold;">Issuance request processed, but no offer URI was returned. Response: ${JSON.stringify(
+            response
+          )}</p>`;
+          responseDiv.style.display = "block";
+          if (requestDiv) requestDiv.style.display = "block"; // Keep request button visible
+        }
+        // If response is null, the error is already shown by startIssuance
+        else {
+          if (requestDiv) requestDiv.style.display = "block"; // Keep request button visible
+        }
       });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const result = await response.json();
-      console.log('result', result);
-      return result;
-    } catch (error) {
-      alert('There is an error, check server/console logs')
-      console.error('There was a problem with the fetch operation:', error);
+    } else {
+      console.warn("Issue VC button (btnIssueVC) not found in the DOM.");
     }
-  }
 
-  document.getElementById('btnIssueVC').addEventListener('click', async (event) => {
-    event.preventDefault();
-    var didElm = document.getElementById('spnUserDid');
-    var userDid = didElm ? didElm.innerText : '';
-    var response = await startIssuance(userDid);
-    if (response.credentialOfferUri) {
-      const divRequestVC = document.getElementById("divRequestVC");
-      divRequestVC.style.display = "none";
-      const divAcceptOfferVC = document.getElementById("divAcceptOfferVC");
-      divAcceptOfferVC.style.display = "";
-      const span_offer_url = document.getElementById("span_offer_url");
-      span_offer_url.innerText = response.credentialOfferUri;
-
-      if (response.txCode) {
-        const divTxCode = document.getElementById("tx_code_div");
-        divTxCode.style.display = "";
-        const txCode = document.getElementById("tx_code");
-        txCode.innerText = response.txCode;
+    function SaveVault_Click() {
+      // Find the anchor tag within the span
+      const offerLinkElement = document.querySelector("#span_offer_url a");
+      if (offerLinkElement && offerLinkElement.href) {
+        // Open the link in a new tab
+        window.open(offerLinkElement.href, "_blank").focus();
+      } else {
+        console.error("Offer URL link not found or is not valid.");
+        // Optionally show an error to the user
+        const responseDiv = document.getElementById("divResponse") || {
+          innerHTML: "",
+          style: {},
+        };
+        responseDiv.innerHTML = `<p class="error-message" style="color: red; font-weight: bold;">Could not find the offer URL to open.</p>`;
+        responseDiv.style.display = "block";
       }
-
     }
-  });
-
-  function SaveVault_Click() {
-    const span_offer_url = document.getElementById("span_offer_url");
-    window.open(span_offer_url.innerText, "_blank").focus();
-  }
-
-</script>
-
+  </script>
 </html>

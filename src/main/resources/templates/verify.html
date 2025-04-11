@@ -6,99 +6,225 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Verification</title>
   <style>
-    .flex-container {
-      display: flex;
-      height: 100%;
-      justify-content: center;
-      align-items: center;
+    body {
       font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-    }
-
-    .flex-container>div {
-      border: 1px;
-    }
-
-    .font-bold {
-      font-size: large;
-      padding: 10px;
-      border-radius: 8px;
-      font-weight: bold;
-    }
-
-    .font-large {
-      font-size: x-large;
-    }
-
-    .form-div {
-      display: flex;
-      flex-direction: column;
-      height: 500px;
-      width: 400px;
-      font-size: medium;
-      background-color: #fff;
+      margin: 0;
       padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      background-color: #f4f4f4; /* Added a light background */
     }
-
+    .header-container {
+      display: flex;
+      justify-content: space-between; /* Space out title and links */
+      align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #ccc;
+      margin-bottom: 30px;
+    }
+    .header-container h3 {
+        margin: 0; /* Remove default margin */
+    }
+    .nav-links a {
+        margin-left: 15px; /* Space out nav links */
+        text-decoration: none;
+        color: #333;
+        font-weight: bold;
+        padding: 5px 10px;
+        border-radius: 4px;
+        transition: background-color 0.3s ease;
+    }
+    .nav-links a:hover {
+        background-color: #eee;
+    }
+    .content-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start; /* Align items to the top */
+    }
+    .verification-box {
+      background-color: #fff;
+      padding: 30px; /* Increased padding */
+      border-radius: 8px;
+      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1); /* Softer shadow */
+      width: 500px; /* Increased width */
+      max-width: 90%; /* Responsive max width */
+    }
+    .verification-box h3 {
+      margin-top: 0; /* Remove top margin */
+      margin-bottom: 20px; /* Add space below heading */
+      text-align: center; /* Center heading */
+      color: #d9534f; /* Adjusted color slightly */
+    }
+    label {
+      display: block; /* Make label take full width */
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #555;
+    }
+    textarea {
+      width: 100%; /* Make textarea fill container */
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box; /* Include padding and border in width */
+      margin-bottom: 20px; /* Space below textarea */
+      min-height: 150px; /* Set a minimum height */
+      resize: vertical; /* Allow vertical resizing */
+    }
     .submitButton {
-      background-color: #4caf50;
+      background-color: #5cb85c; /* Adjusted green */
       color: white;
-      padding: 14px 20px;
-      margin: 8px 0;
+      padding: 12px 20px; /* Slightly adjusted padding */
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      width: 100%; /* Make button full width */
+      font-size: 16px; /* Larger font size */
+      transition: background-color 0.3s ease;
+      margin-bottom: 20px; /* Space below button */
     }
+    .submitButton:hover {
+      background-color: #4cae4c; /* Darker green on hover */
+    }
+    #divResponse {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+      overflow-wrap: break-word; /* Wrap long lines */
+      display: none; /* Initially hidden */
+    }
+    #divResponse p, #divResponse ul {
+        margin-top: 0;
+        margin-bottom: 10px;
+    }
+    #divResponse ul {
+        padding-left: 20px; /* Indent list */
+    }
+    #divResponse li {
+        margin-bottom: 5px;
+    }
+    .status-valid { color: green; font-weight: bold; }
+    .status-invalid { color: red; font-weight: bold; }
+    .error-message { color: red; }
   </style>
 </head>
 
 <body>
-  <div style="display: flex; flex-direction: column">
-    <div class="flex-container flex-direction: column; ">
-      <h3 class="font-large">Affinidi Verification</h3>
-      <div class="font-bold"><a href="/">Home</a></div>
-      <div class="font-bold"><a href="/iota">Iota</a></div>
+  <div class="header-container">
+    <h3>Affinidi Verification</h3>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/iota">Iota</a>
     </div>
-    <div class="flex-container">
-      <div class="font-bold">
-        <h3 class="font-bold" style="color: red;">Verify Digital Credentials</h3>
-        <div class="form-div">
-          <label for="txtVC">Enter Verifiable Credential</label>
-          <textarea id="txtVC" rows="10" cols="50" placeholder="Paste your Verifiable Credential here"></textarea>
+  </div>
 
-        <button class="submitButton" id="btnVerifyVC">Verify </button>
-        <div id="divResponse" style="display:none;width: 600px;overflow: auto;">
-        </div>
+  <div class="content-container">
+    <div class="verification-box">
+      <h3>Verify Digital Credentials</h3>
+      <!-- Removed the nested div structure for simplicity -->
+      <label for="txtVC">Enter Verifiable Credential:</label>
+      <textarea id="txtVC" rows="10" placeholder="Paste your Verifiable Credential JSON here..."></textarea>
+
+      <button class="submitButton" id="btnVerifyVC">Verify Credential</button>
+
+      <div id="divResponse">
+        <!-- Response will be populated here by JavaScript -->
       </div>
     </div>
   </div>
-</body>
+
 <script>
+  // Get references to DOM elements
+  const verifyButton = document.getElementById("btnVerifyVC");
+  const vcTextarea = document.getElementById("txtVC");
+  const responseDiv = document.getElementById("divResponse");
 
-  document.getElementById("btnVerifyVC").addEventListener("click", function() {
-    const vcData = document.getElementById("txtVC").value;
+  verifyButton.addEventListener("click", function() {
+    const vcData = vcTextarea.value;
 
+    // --- 1. Basic Input Validation ---
+    if (!vcData || !vcData.trim()) {
+      responseDiv.style.display = "block"; // Show the response div
+      responseDiv.innerHTML = "<p class='error-message'>Please paste a Verifiable Credential first.</p>";
+      return; // Stop execution
+    }
 
+    // --- 2. Show Loading State ---
+    responseDiv.style.display = "block"; // Show the response div
+    responseDiv.innerHTML = "<p>Verifying...</p>"; // Indicate activity
 
+    // --- 3. Fetch API Call ---
     fetch('/api/vc-verify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
+        // Add any other necessary headers like Authorization if needed
       },
-      body: JSON.stringify({ credentialData: vcData })
+      body: JSON.stringify({ credentialData: vcData }) // Send data in expected format
     })
-    .then(response => response.json())
+    .then(response => {
+      // Check if the response status is OK (e.g., 200)
+      if (!response.ok) {
+        // If not OK, try to parse error response or throw a generic error
+        return response.json().catch(() => {
+            // If response body is not JSON or empty
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }).then(errData => {
+            // If server sent a JSON error message
+            throw new Error(errData.message || `HTTP error! Status: ${response.status}`);
+        });
+      }
+      return response.json(); // Parse the JSON body
+    })
     .then(data => {
-      document.getElementById("divResponse").style.display = "block";
-      document.getElementById("divResponse").innerText = data;
+      // --- 4. Process Successful Response ---
+      responseDiv.innerHTML = ""; // Clear loading message or previous results
+
+      // Display Validation Status
+      const statusElement = document.createElement("p");
+      if (data.isValid) {
+        statusElement.innerHTML = `<strong>Validation Status:</strong> <span class="status-valid">Valid</span>`;
+      } else {
+        statusElement.innerHTML = `<strong>Validation Status:</strong> <span class="status-invalid">Invalid</span>`;
+      }
+      responseDiv.appendChild(statusElement);
+
+      // Display Errors (if any)
+      // Check if 'errors' exists, is an array, and has items
+      if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+        const errorsHeader = document.createElement("p");
+        errorsHeader.innerHTML = "<strong>Errors:</strong>";
+        responseDiv.appendChild(errorsHeader);
+
+        const errorsList = document.createElement("ul");
+        data.errors.forEach(error => {
+          const errorItem = document.createElement("li");
+          // Display error safely (assuming it's a string)
+          errorItem.textContent = typeof error === 'string' ? error : JSON.stringify(error);
+          errorsList.appendChild(errorItem);
+        });
+        responseDiv.appendChild(errorsList);
+      } else if (data.isValid) {
+        // Only show "No errors" message if the credential is valid
+        const noErrorsElement = document.createElement("p");
+        noErrorsElement.textContent = "No validation errors found.";
+        responseDiv.appendChild(noErrorsElement);
+      }
+      // If !data.isValid and errors array is empty/missing, the "Invalid" status serves as the primary indicator.
     })
     .catch(error => {
-      console.error('Error:', error);
-      document.getElementById("divResponse").style.display = "block";
-      document.getElementById("divResponse").innerText = "An error occurred while verifying the credential.";
+      // --- 5. Handle Errors (Fetch, Network, Parsing, Thrown) ---
+      console.error('Error during verification:', error); // Log detailed error for debugging
+      responseDiv.innerHTML = ""; // Clear loading message or previous results
+      const errorElement = document.createElement("p");
+      errorElement.className = "error-message"; // Style the error
+      // Display a user-friendly error message
+      errorElement.textContent = `Verification failed: ${error.message || "An unknown error occurred."}`;
+      responseDiv.appendChild(errorElement);
     });
   });
 </script>
 
+</body>
 </html>
