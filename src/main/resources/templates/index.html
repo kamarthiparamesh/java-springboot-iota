@@ -146,6 +146,11 @@
         <a href="/">Home</a>
         <a href="/iota">Iota</a>
         <a href="/verify">Verify</a>
+        <div th:if="${userDid != null}">
+          <a href="/user">User Info</a>
+        </div>
+        <a th:if="${userDid != null}" href="/logout">Logout</a>
+      </div>
     </div>
 
   <div style="display: flex; flex-direction: column">
