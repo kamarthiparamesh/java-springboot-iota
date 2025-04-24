@@ -86,6 +86,12 @@
       .submitButton:hover {
         background-color: #45a049;
       }
+      .batchButton {
+        background-color: #007bff; /* Blue */
+      }
+      .batchButton:hover {
+        background-color: #0056b3; /* Darker Blue */
+      }
       .resetButton {
         background-color: rgb(233, 26, 26); /* Red */
       }
@@ -116,10 +122,10 @@
       }
       /* Style for <pre> tag used for JSON output */
       #divClaimedResponse pre {
-          margin: 0;
-          white-space: pre-wrap; /* Allow wrapping */
-          word-break: break-all; /* Break long lines */
-          font-family: monospace; /* Use monospace for JSON */
+        margin: 0;
+        white-space: pre-wrap; /* Allow wrapping */
+        word-break: break-all; /* Break long lines */
+        font-family: monospace; /* Use monospace for JSON */
       }
       .error-message {
         color: red;
@@ -166,7 +172,8 @@
         word-break: break-all;
       }
 
-      #jsonResponse { /* Kept for first section, if needed later */
+      #jsonResponse {
+        /* Kept for first section, if needed later */
         width: 100%;
         min-height: 150px;
         border: 1px solid #ccc;
@@ -177,7 +184,6 @@
         display: none; /* Initially hidden, shown by JS */
         /* font-family: monospace; Removed */
       }
-
     </style>
   </head>
 
@@ -215,6 +221,9 @@
         <!-- Issue Button -->
         <div id="divRequestVC">
           <button class="submitButton" id="btnIssueVC">Issue VC</button>
+          <button class="submitButton batchButton" id="btnBatchIssueVC">
+            Batch Issue VC
+          </button>
         </div>
 
         <!-- Response Area 1 (Status/JSON - Currently Hidden) -->
@@ -300,6 +309,7 @@
   <script>
     // Get references to elements from the first section
     const issueButton = document.getElementById("btnIssueVC");
+    const batchIssueButton = document.getElementById("btnBatchIssueVC"); // <-- Add reference for the new button
     const requestDiv = document.getElementById("divRequestVC");
     const acceptOfferDiv = document.getElementById("divAcceptOfferVC");
     const offerUrlSpan = document.getElementById("span_offer_url");
@@ -317,7 +327,6 @@
 
     // Get references for the second section
     const claimedVcButton = document.getElementById("btnClaimedVC");
-    // const claimedJsonResponseTextArea = document.getElementById("claimedJsonResponse"); // No longer needed
     const claimedResponseDiv = document.getElementById("divClaimedResponse");
     const claimedResetDiv = document.getElementById("divClaimedReset");
     const requestClaimedVcDiv = document.getElementById("divRequestClaimedVC");
@@ -325,31 +334,40 @@
     /**
      * Initiates the credential issuance process via API call.
      * @param {string|null} userDid - The user's DID, or null if not available.
+     * @param {string|null} issueType - The type of issuance ('batch' or null/undefined for single).
      * @returns {Promise<object|null>} The API response object on success, or null on failure.
      */
-    async function startIssuance(userDid) {
+    async function startIssuance(userDid, issueType = null) {
+      // <-- Add issueType parameter
       // Reset UI elements for the first section
       responseDiv.innerHTML = ""; // Clear any previous status messages
       responseDiv.appendChild(jsonResponseTextArea); // Ensure textarea is inside responseDiv
       jsonResponseTextArea.value = "";
       jsonResponseTextArea.style.display = "none";
-      // responseDiv.style.display = "none"; // Already hidden by default CSS
       acceptOfferDiv.style.display = "none";
       claimedDetailsContainer.style.display = "none"; // Ensure second section is hidden
 
       // Show loading state
       const loadingMsg = document.createElement("p");
-      loadingMsg.textContent = "Requesting credential issuance...";
+      loadingMsg.textContent = `Requesting ${
+        issueType === "batch" ? "batch " : ""
+      }credential issuance...`; // <-- Dynamic loading message
       responseDiv.insertBefore(loadingMsg, jsonResponseTextArea);
       responseDiv.style.display = "block";
       if (issueButton) issueButton.disabled = true;
+      if (batchIssueButton) batchIssueButton.disabled = true; // <-- Disable batch button too
 
       try {
-        console.log("Sending userDid to API:", userDid);
+        const requestBody = { userDid: userDid };
+        if (issueType) {
+          requestBody.issueType = issueType; // <-- Add issueType to body if present
+        }
+        console.log("Sending to API:", requestBody);
+
         const apiResponse = await fetch("/api/cis-issuance", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userDid: userDid }),
+          body: JSON.stringify(requestBody), // <-- Use the constructed body
         });
 
         if (!apiResponse.ok) {
@@ -370,7 +388,6 @@
 
         // Display JSON response (but keep divResponse hidden)
         jsonResponseTextArea.value = JSON.stringify(result, null, 2);
-        // jsonResponseTextArea.style.display = "block"; // Keep hidden unless needed
         responseDiv.style.display = "none";
 
         return result; // Return successful result
@@ -382,10 +399,52 @@
         // Display error message (but keep divResponse hidden)
         responseDiv.innerHTML = `<p class="error-message">Error starting issuance: ${error.message}</p>`;
         jsonResponseTextArea.style.display = "none";
-        // responseDiv.style.display = "block"; // Keep hidden
         return null; // Indicate failure
       } finally {
         if (issueButton) issueButton.disabled = false; // Re-enable button
+        if (batchIssueButton) batchIssueButton.disabled = false; // <-- Re-enable batch button too
+      }
+    }
+
+    // --- Common function to handle UI updates after issuance attempt ---
+    function handleIssuanceResult(resultData) {
+      if (resultData && resultData.credentialOfferUri) {
+        // --- Success ---
+        requestDiv.style.display = "none"; // Hide "Issue VC" button area
+        acceptOfferDiv.style.display = "block"; // Show Offer details area
+
+        // Show the second section container (Claimed Details)
+        claimedDetailsContainer.style.display = "flex";
+        // Ensure elements within the second section are in their initial state
+        if (requestClaimedVcDiv) requestClaimedVcDiv.style.display = "block"; // Show "Get Details" button
+        if (claimedResponseDiv) claimedResponseDiv.style.display = "none"; // Hide response area 2
+        if (claimedResetDiv) claimedResetDiv.style.display = "none"; // Hide reset button 2
+
+        // Populate Offer Details
+        offerUrlSpan.innerHTML = `<a href="${resultData.credentialOfferUri}" target="_blank" style="word-break: break-all;">${resultData.credentialOfferUri}</a>`;
+
+        if (resultData.issuanceId) {
+          issuanceIdSpan.innerText = resultData.issuanceId;
+          issuanceIdDiv.style.display = "block";
+        } else {
+          issuanceIdSpan.innerText = "";
+          issuanceIdDiv.style.display = "none";
+        }
+        if (resultData.txCode) {
+          txCodeSpan.innerText = resultData.txCode;
+          txCodeDiv.style.display = "block";
+        } else {
+          txCodeSpan.innerText = "";
+          txCodeDiv.style.display = "none";
+        }
+      } else if (resultData) {
+        // API call succeeded but didn't return the expected URI
+        requestDiv.style.display = "block"; // Keep "Issue VC" button visible
+        claimedDetailsContainer.style.display = "none"; // Keep second section hidden
+      } else {
+        // API call failed
+        requestDiv.style.display = "block"; // Keep "Issue VC" button visible
+        claimedDetailsContainer.style.display = "none"; // Keep second section hidden
       }
     }
 
@@ -393,55 +452,30 @@
     if (issueButton) {
       issueButton.addEventListener("click", async (event) => {
         event.preventDefault();
-
         const didElm = document.getElementById("spnUserDid");
         const userDid = didElm ? didElm.innerText.trim() : null;
-        console.log("User DID found on page:", userDid);
-
-        const resultData = await startIssuance(userDid);
-
-        if (resultData && resultData.credentialOfferUri) {
-          // --- Success ---
-          requestDiv.style.display = "none"; // Hide "Issue VC" button area
-          acceptOfferDiv.style.display = "block"; // Show Offer details area
-
-          // Show the second section container (Claimed Details)
-          claimedDetailsContainer.style.display = "flex";
-          // Ensure elements within the second section are in their initial state
-          if (requestClaimedVcDiv) requestClaimedVcDiv.style.display = "block"; // Show "Get Details" button
-          if (claimedResponseDiv) claimedResponseDiv.style.display = "none"; // Hide response area 2
-          if (claimedResetDiv) claimedResetDiv.style.display = "none"; // Hide reset button 2
-
-          // Populate Offer Details
-          offerUrlSpan.innerHTML = `<a href="${resultData.credentialOfferUri}" target="_blank" style="word-break: break-all;">${resultData.credentialOfferUri}</a>`;
-
-          if (resultData.issuanceId) {
-            issuanceIdSpan.innerText = resultData.issuanceId;
-            issuanceIdDiv.style.display = "block";
-          } else {
-            issuanceIdSpan.innerText = "";
-            issuanceIdDiv.style.display = "none";
-          }
-          if (resultData.txCode) {
-            txCodeSpan.innerText = resultData.txCode;
-            txCodeDiv.style.display = "block";
-          } else {
-            txCodeSpan.innerText = "";
-            txCodeDiv.style.display = "none";
-          }
-        } else if (resultData) {
-          // API call succeeded but didn't return the expected URI
-          // Error message is already handled (but hidden) in startIssuance
-          requestDiv.style.display = "block"; // Keep "Issue VC" button visible
-          claimedDetailsContainer.style.display = "none"; // Keep second section hidden
-        } else {
-          // API call failed (error already handled (but hidden) by startIssuance)
-          requestDiv.style.display = "block"; // Keep "Issue VC" button visible
-          claimedDetailsContainer.style.display = "none"; // Keep second section hidden
-        }
+        console.log("User DID found on page (Single Issue):", userDid);
+        const resultData = await startIssuance(userDid); // <-- Call without issueType
+        handleIssuanceResult(resultData); // <-- Use common handler
       });
     } else {
       console.warn("Issue VC button (btnIssueVC) not found in the DOM.");
+    }
+
+    // <-- Add Event Listener for "Batch Issue VC" Button -->
+    if (batchIssueButton) {
+      batchIssueButton.addEventListener("click", async (event) => {
+        event.preventDefault();
+        const didElm = document.getElementById("spnUserDid");
+        const userDid = didElm ? didElm.innerText.trim() : null;
+        console.log("User DID found on page (Batch Issue):", userDid);
+        const resultData = await startIssuance(userDid, "batch"); // <-- Call WITH issueType='batch'
+        handleIssuanceResult(resultData); // <-- Use common handler
+      });
+    } else {
+      console.warn(
+        "Batch Issue VC button (btnBatchIssueVC) not found in the DOM."
+      );
     }
 
     // Function for "Claim VC" Button (Opens Vault)
@@ -534,7 +568,6 @@
           if (claimedResetDiv) claimedResetDiv.style.display = "block";
 
           claimedResponseDiv.style.display = "block"; // Ensure container is visible
-
         } catch (error) {
           console.error(
             "There was a problem with the claimed VC fetch operation:",
@@ -549,7 +582,6 @@
           if (requestClaimedVcDiv) requestClaimedVcDiv.style.display = "block";
           claimedVcButton.disabled = false; // Re-enable button
           if (claimedResetDiv) claimedResetDiv.style.display = "none"; // Keep reset hidden
-
         } finally {
           // Re-enable button only if an error occurred AND the button container is still visible
           if (
@@ -591,7 +623,5 @@
         claimedVcButton.disabled = false;
       }
     }
-
   </script>
-
 </html>

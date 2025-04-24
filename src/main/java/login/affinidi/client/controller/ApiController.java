@@ -1,5 +1,7 @@
 package login.affinidi.client.controller;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.MediaType;
@@ -25,20 +27,62 @@ public class ApiController {
         var userDid = data.get("userDid");
         System.out.println("userDid " + userDid);
 
+        var IssueType = data.get("issueType");
+        System.out.println("IssueType " + IssueType);
+
+        ArrayList<Map<String, Object>> credentialRequest = new ArrayList<>();
         String credentialTypeId = "InsuranceRegistration";
 
-        Map<String, Object> credentialData = Map.of(
-                "email", "paramesh.k@afffinid.com",
-                "name", "parmaesh",
-                "phoneNumber", "998016607",
-                "dob", "22/02/2010",
-                "gender", "Male",
-                "address", "Bangalore",
-                "postcode", "560103",
-                "city", "Bangalore",
-                "country", "India");
+        if ("batch".equals(IssueType)) {
+            // Construct batch request with multiple credentials
+            credentialRequest.add(Map.of(
+                    "credentialTypeId", credentialTypeId,
+                    "credentialData", Map.of(
+                            "email", "user1@example.com",
+                            "name", "User One",
+                            "phoneNumber", "1234567890",
+                            "dob", "01/01/1990",
+                            "gender", "Female",
+                            "address", "City A",
+                            "postcode", "123456",
+                            "city", "City A",
+                            "country", "Country A"
+                    )
+            ));
 
-        var response = Utils.startIssuance(userDid, credentialData, credentialTypeId);
+            credentialRequest.add(Map.of(
+                    "credentialTypeId", credentialTypeId,
+                    "credentialData", Map.of(
+                            "email", "user2@example.com",
+                            "name", "User Two",
+                            "phoneNumber", "0987654321",
+                            "dob", "02/02/1992",
+                            "gender", "Male",
+                            "address", "City B",
+                            "postcode", "654321",
+                            "city", "City B",
+                            "country", "Country B"
+                    )
+            ));
+        } else {
+            // Construct single request
+            credentialRequest.add(Map.of(
+                    "credentialTypeId", credentialTypeId,
+                    "credentialData", Map.of(
+                            "email", "paramesh.k@afffinid.com",
+                            "name", "parmaesh",
+                            "phoneNumber", "998016607",
+                            "dob", "22/02/2010",
+                            "gender", "Male",
+                            "address", "Bangalore",
+                            "postcode", "560103",
+                            "city", "Bangalore",
+                            "country", "India"
+                    )
+            ));
+        }
+
+        var response = (StartIssuanceResponse) Utils.startIssuance(userDid, credentialRequest);
         return response;
     }
 

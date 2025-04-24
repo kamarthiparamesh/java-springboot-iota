@@ -50,37 +50,41 @@ public class Utils {
 
     }
 
-    public static StartIssuanceResponse startIssuance(String userDID, Map<String, Object> credentialData,
-            String credentialTypeId) {
-
+    public static StartIssuanceResponse startIssuance(String userDID, List<Map<String, Object>> credentialRequest) {
         StartIssuanceResponse response = null;
+
         try {
             // Create a client for issuance
             ApiClient issuanceClient = Configuration.getDefaultApiClient();
             ApiKeyAuth issueTokenAuth = (ApiKeyAuth) issuanceClient.getAuthentication("ProjectTokenAuth");
 
-            // Create a authentication token
+            // Create an authentication token
             String projectToken = getAuthorizationToken();
             issueTokenAuth.setApiKey(projectToken);
 
-            // Iniialize the API client
+            // Initialize the API client
             IssuanceApi issuanceApi = new IssuanceApi(issuanceClient);
 
             // Create input for issuance service
-            StartIssuanceInput startIssuanceInput = new StartIssuanceInput()
-                    .data(new ArrayList<StartIssuanceInputDataInner>(List.of(new StartIssuanceInputDataInner()
-                            .credentialTypeId(credentialTypeId).credentialData(credentialData))));
+            StartIssuanceInput startIssuanceInput = new StartIssuanceInput();
+
+            // Add each credential to the issuance input
+            for (Map<String, Object> credential : credentialRequest) {
+                StartIssuanceInputDataInner inputData = new StartIssuanceInputDataInner()
+                        .credentialTypeId((String) credential.get("credentialTypeId"))
+                        .credentialData((Map<String, Object>) credential.get("credentialData"));
+                startIssuanceInput.addDataItem(inputData);
+            }
 
             // Conditionally set claimMode and holderDid
             if (userDID == null || userDID.isEmpty()) {
-                startIssuanceInput.claimMode(ClaimModeEnum.TX_CODE);
+                startIssuanceInput.claimMode(StartIssuanceInput.ClaimModeEnum.TX_CODE);
             } else {
-                startIssuanceInput.holderDid(userDID).claimMode(ClaimModeEnum.FIXED_HOLDER);
+                startIssuanceInput.holderDid(userDID).claimMode(StartIssuanceInput.ClaimModeEnum.FIXED_HOLDER);
             }
 
-            // Issue the credential using the data above
-            response = issuanceApi.startIssuance(EnvironmentUtil.getValueFromEnvConfig("PROJECT_ID"),
-                    startIssuanceInput);
+            // Issue the credentials using the data above
+            response = issuanceApi.startIssuance(EnvironmentUtil.getValueFromEnvConfig("PROJECT_ID"), startIssuanceInput);
             System.out.println("Credential Offer Generated ********** " + response.getCredentialOfferUri() + "\n\n");
 
             response.setCredentialOfferUri(VaultUtil.buildClaimLink(response.getCredentialOfferUri()));
@@ -91,7 +95,6 @@ public class Utils {
             ex.printStackTrace();
         }
         return response;
-
     }
 
     public static InitiateDataSharingRequestOK iotaStart(String nonce, String redirectUrl, String iotaQueryId,
